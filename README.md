@@ -2,5 +2,6 @@
 
 
 Magne: Potential password fix:
-in Console type:
+
+in Terminal type:
 git remote set-url origin git@github.com:MagneISSSV1337SSB/ISS-SSB.git
