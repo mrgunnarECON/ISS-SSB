@@ -5,23 +5,49 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Loading libraries
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+Loading packages needed
 
 ```{r}
-1 + 1
+library(eurostat)
+library(tidyverse)
+library(magrittr)
+library(httr)
+library(rjstat)
+
 ```
 
-You can add options to executable code like this
+## Downloading data
+
+Loading packages needed for file.
 
 ```{r}
 #| echo: false
-2 * 2
+
+url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&indic_sb=V12150&indic_sb=V16110&indic_sb=V91110&size_emp=TOTAL&nace_r2=B&nace_r2=C&nace_r2=D&lang=en"
+getresponse <- GET(url)
+json <- content(getresponse, as = "text")
+df <- fromJSONstat(json)
+head(df)
+
+df1 <- df %>% 
+  filter('Geopolitical entity (reporting)' == "Belgium")
+
+
+a <- get_eurostat("tec00001")
+  filters = list(na_item = "B1GQ",
+                            unit = "CP_MEUR",
+                            geo = c("BE", "DE"),
+                            time = c("2016", "2017"))) %>% 
+  head()
+
+  
+  
+
+get_eurostat_toc("tec00001") %>% 
+  head()
+
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
