@@ -55,22 +55,37 @@ Wrangling
 ```{r}
 #| echo: false
 
-colnames(df1)
+colnames(df)
 
 # Removing and renaming colomns
 df1 <- df
 df1$`Time frequency` <- NULL
 df1$`Size classes in number of persons employed` <- NULL
-df1$`Economical indicator for structural business statistics` <- NULL #When we use multiple indicators at the same time, we will have to do this a different way, just doing it like this as an example
+#df1$`Economical indicator for structural business statistics` <- NULL #When we use multiple indicators at the same time, we will have to do this a different way, just doing it like this as an example
 df1 <- df1 %>% 
   rename(category = "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
-  #indicator = "Economical indicator for structural business statistics",
+  indicator = "Economical indicator for structural business statistics",
   country = "Geopolitical entity (reporting)",
   year = "Time",
   value_added1 = "value")
 
+df2 <- df1 %>% 
+  pivot_wider(names_from = indicator, values_from = value_added1)
+
+df2$`Apparent labour productivity (Gross value added per person employed) - thousand euro` <- NULL
+
+df2 <- df2 %>% 
+  rename(value_added = "Value added at factor cost - million euro",
+  employed = "Persons employed - number")
+
+df2$value_per_employe <- df2$value_added/df2$employed
+
+# Removing all NA observations for quick view
+df3 <- df2 %>% 
+  filter(!(is.na(value_added) & is.na(value_per_employe)))
+
 # Example to filter out just one nation
-df1 <- df %>% 
-  filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
+#df1 <- df %>% 
+  #filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
 
 ```
