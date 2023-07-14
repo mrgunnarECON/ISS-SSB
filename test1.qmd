@@ -30,9 +30,10 @@ getresponse <- GET(url)
 json <- content(getresponse, as = "text")
 df <- fromJSONstat(json)
 head(df)
+colnames(df)
 
 df1 <- df %>% 
-  filter('Geopolitical entity (reporting)' == "Belgium")
+  filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
 
 
 a <- get_eurostat("tec00001")
