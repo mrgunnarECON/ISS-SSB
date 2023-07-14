@@ -20,35 +20,57 @@ library(rjstat)
 
 ## Downloading data
 
-Loading packages needed for file.
+Downloading data and making it into a dataframe
 
 ```{r}
 #| echo: false
 
+#Eurostat data code:SBS_SC_SCA_R2
+#Eurostat query builder: https://ec.europa.eu/eurostat/web/query-builder/tool
 url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&indic_sb=V12150&indic_sb=V16110&indic_sb=V91110&size_emp=TOTAL&nace_r2=B&nace_r2=C&nace_r2=D&lang=en"
 getresponse <- GET(url)
 json <- content(getresponse, as = "text")
 df <- fromJSONstat(json)
 head(df)
-colnames(df)
-
-df1 <- df %>% 
-  filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
 
 
-a <- get_eurostat("tec00001")
-  filters = list(na_item = "B1GQ",
-                            unit = "CP_MEUR",
-                            geo = c("BE", "DE"),
-                            time = c("2016", "2017"))) %>% 
-  head()
 
-  
-  
-
-get_eurostat_toc("tec00001") %>% 
-  head()
+# a <- get_eurostat("tec00001")
+#   filters = list(na_item = "B1GQ",
+#                             unit = "CP_MEUR",
+#                             geo = c("BE", "DE"),
+#                             time = c("2016", "2017"))) %>% 
+#   head()
+# 
+# 
+# get_eurostat_toc("tec00001") %>% 
+#   head()
 
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Wrangling Data
+
+Wrangling
+
+```{r}
+#| echo: false
+
+colnames(df1)
+
+# Removing and renaming colomns
+df1 <- df
+df1$`Time frequency` <- NULL
+df1$`Size classes in number of persons employed` <- NULL
+df1$`Economical indicator for structural business statistics` <- NULL #When we use multiple indicators at the same time, we will have to do this a different way, just doing it like this as an example
+df1 <- df1 %>% 
+  rename(category = "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+  #indicator = "Economical indicator for structural business statistics",
+  country = "Geopolitical entity (reporting)",
+  year = "Time",
+  value_added1 = "value")
+
+# Example to filter out just one nation
+df1 <- df %>% 
+  filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
+
+```
