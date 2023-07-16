@@ -1,0 +1,125 @@
+---
+title: "Test File"
+author: "Magne"
+format: html
+editor: visual
+---
+
+## Loading libraries
+
+Loading packages needed
+
+```{r}
+#library(eurostat)
+#library(tidyverse)
+#library(magrittr)
+#library(httr)
+#library(rjstat)
+
+library(knitr)
+library(kableExtra)
+library(magick)
+library(htmltools)
+
+library(webshot)
+library(gt)
+
+pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat)
+
+```
+
+## Downloading data
+
+Downloading data and making it into a dataframe
+
+```{r}
+#| echo: false
+
+#Eurostat data code:SBS_SC_SCA_R2
+#Eurostat query builder: https://ec.europa.eu/eurostat/web/query-builder/tool
+url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&indic_sb=V12150&indic_sb=V16110&indic_sb=V91110&size_emp=TOTAL&nace_r2=B&nace_r2=C&nace_r2=D&lang=en"
+getresponse <- GET(url)
+json <- content(getresponse, as = "text")
+df <- fromJSONstat(json)
+head(df)
+
+
+
+# a <- get_eurostat("tec00001")
+#   filters = list(na_item = "B1GQ",
+#                             unit = "CP_MEUR",
+#                             geo = c("BE", "DE"),
+#                             time = c("2016", "2017"))) %>% 
+#   head()
+# 
+# 
+# get_eurostat_toc("tec00001") %>% 
+#   head()
+
+```
+
+## Wrangling Data
+
+Hei
+
+Wrangling
+
+```{r}
+#| echo: false
+
+colnames(df)
+
+# Removing and renaming colomns
+df1 <- df
+df1$`Time frequency` <- NULL
+df1$`Size classes in number of persons employed` <- NULL
+df1 <- df1 %>% 
+  rename(category = "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+  indicator = "Economical indicator for structural business statistics",
+  country = "Geopolitical entity (reporting)",
+  year = "Time",
+  value_added1 = "value")
+
+# Make the indicators into new Columns to cut down number of rows
+df2 <- df1 %>% 
+  pivot_wider(names_from = indicator, values_from = value_added1)
+
+df2$`Apparent labour productivity (Gross value added per person employed) - thousand euro` <- NULL
+
+df2 <- df2 %>% 
+  rename(value_added = "Value added at factor cost - million euro",
+  employed = "Persons employed - number")
+
+df2$value_per_employe <- df2$value_added/df2$employed
+
+# Removing all NA observations for quick view
+df3 <- df2 %>% 
+  filter(!(is.na(value_added) & is.na(value_per_employe)))
+
+# Example to filter out just one nation
+#df1 <- df %>% 
+  #filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
+
+```
+
+## Make Pretty DF
+
+Something Something
+
+```{r}
+#| echo: false
+
+# 10 first rows
+df_first_10 <- head(df, 10)
+
+
+# Convert the dataframe to a tableGrob (graphical object)
+table <- tableGrob(df_first_10)
+
+# Save this graphical object as an image
+png(filename = "df_image.png", width = 800, height = 600)
+grid.draw(df)
+dev.off()
+
+library(grid)
+```
