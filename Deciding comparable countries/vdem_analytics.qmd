@@ -1,0 +1,107 @@
+---
+title: "Vdem analytics"
+author: "Julie Sofie"
+format: html
+editor: visual
+---
+
+# Political stucture
+
+```{r}
+## Working directory
+setwd("/home/julsofpet/julie/ISSSV1337/Political_structure")
+
+## Packages
+library(haven)
+library(tidyverse)
+
+
+## Loading in data
+load("vdem.rda")
+```
+
+\# Variable description
+
+\*\*Country name\*\* : Refers to the name of the country
+
+\*\*Year\*\* : The year for when the data applies
+
+\*\*v2x_polyarchy\*\* : To what extent is the ideal of electoral democracy in its fullest sense achieved (0-1)
+
+\*\*v2x_libdem\*\* : To what extent is the ideal of liberal democracy achieved (0-1)
+
+\*\*v2x_partipdem\*\* : To what extent is the ideal of participatory democracy achieved (0-1)
+
+\*\*v2x_api\*\* : To what extent is the electoral principle of democracy achieved (0-1)
+
+\*\*v2x_freexp_altinf\*\* : To what extent does government respect press and media freedom, the freedom of ordinary people to discuss political matters at home and in the public sphere, as well as the freedom of academic and cultural expression (0-1)
+
+\*\*2x_frassoc_thick\*\* : To what extent are parties, including opposition parties, allowed to form and to participate in elections, and to what extent are civil society organizations able to form and to operate freely (0-1)
+
+\*\*v2xel_frefair\*\* : To what extent are elections free and fair (0-1)
+
+\*\*v2x_jucon\*\* : To what extent does the executive respect the constitution and comply with court rulings, and to what extent is the judiciary able to act in an independent fashion (0-1)
+
+\*\*v2xlg_legcon\*\* : To what extent are the legislature and government agencies e.g., comptroller general, general prosecutor, or ombudsman capable of questioning, investigating, and exercising oversight over the executive (0-1)
+
+Can combine several and calculate mean
+
+Picking countries in the EU, EEA and trading partners.
+
+```{r}
+#|echo: True
+
+## Taking out countries I need for my analysis 
+data <- data %>%
+  filter(country_name == "Malta" | country_name == "Luxembourg" | country_name == "Cyprus" | country_name == "Estonia" | country_name == "Latvia" | country_name == "Slovenia" | country_name == "Lithuania" | country_name == "Croatia" | country_name == "Ireland" | country_name == "Slovakia" | country_name == "Finland" | country_name == "Denmark" | country_name == "Bulgaria" | country_name == "Austria" | country_name == "Hungary" | country_name == "Portugal" | country_name == "Sweden" | country_name == "Greece" | country_name == "Czechia" | country_name == "Belgium" | country_name == "Netherlands" | country_name == "Romania" | country_name == "Poland" | country_name == "Spain" | country_name == "Italy" | country_name == "France" | country_name == "Germany" | country_name == "Iceland" | country_name == "Liechtenstein" | country_name == "United Kingdom" | country_name == "United States of America" | country_name == "China" | country_name == "Canada" | country_name == "Norway")
+
+
+## Choosing dates from ? and upwards 
+data <- data %>%
+  filter(year >= 2005)
+
+data <- data %>%
+  select(country_name, year, v2x_libdem, v2x_api)
+
+
+# Saving the data
+#save(data, file = "data-vdem-sem4.rda")
+```
+
+Comparing liberal democracy in all relevant countries
+
+```{r}
+#|echo: True
+
+data %>% # Layer 1
+  ggplot(aes(year, v2x_libdem, color = country_name))+ # Layer 2
+  geom_path() # Layer 3
+```
+
+Comparing democracy in different countries
+
+```{r}
+#|echo: True
+
+data %>%
+  filter(year == "2019") %>%
+  ggplot(aes(reorder(country_name, -v2x_libdem), v2x_libdem)) + 
+  geom_col() +
+  coord_flip() + 
+  labs(title = "Liberal democracy in relevant countries") +
+  labs(x = "Country", y = "Liberal democracy")
+```
+
+```{r}
+
+
+data %>%
+  filter(year == "2019") %>%
+  select(country_name, v2x_libdem) %>%
+  mutate(rank_libdem = abs(0.852-v2x_libdem)) %>%
+  arrange(desc(-rank_libdem)) %>%
+  filter(country_name != "Norway") %>%
+  rowid_to_column()
+```
+
+\
