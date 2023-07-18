@@ -46,17 +46,20 @@ df <- fromJSONstat(json)
 head(df)
 
 
+###Eurostat API
+# search_eurostat("Annual enterprise statistics by size class for special aggregates of activities") %>% 
+#   head()
 
-# a <- get_eurostat("tec00001")
+#api <- get_eurostat("sbs_sc_sca_r2")
+
+# a <- get_eurostat("SBS_SC_SCA_R2")
 #   filters = list(na_item = "B1GQ",
-#                             unit = "CP_MEUR",
+#                             unit = "CP_MEUR", #wrong
 #                             geo = c("BE", "DE"),
-#                             time = c("2016", "2017"))) %>% 
+#                             time = c("2016", "2017"))) %>%
 #   head()
-# 
-# 
-# get_eurostat_toc("tec00001") %>% 
-#   head()
+
+
 
 ```
 
