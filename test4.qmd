@@ -18,6 +18,8 @@ change
 #library(httr)
 #library(rjstat)
 
+library(rlang)
+
 
 
 pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat)
@@ -191,7 +193,7 @@ nace_codes2 <- nace_codes2 %>%
   select(-class, -isicrev..4)
 
 
-# TODO Add NACE level 1-3
+# Add NACE level 1-3
 nace_codes2$level <- nchar(gsub("\\.", "", nace_codes2$nace_code)) #ignore .
 
 # Put nace_code first
@@ -222,7 +224,9 @@ df3 <- df3 %>%
 
 ## Adding value added and employe percentages for each level
 
-\^
+Create df4 with value added population and percentage for each level
+
+Added growth rates to df4, not this has not been cleaned, there are some
 
 ```{r}
 #| echo: false
@@ -239,13 +243,21 @@ for(l in unique(df3$level)) {
            level_value_percentage = ifelse(!is.na(value_added), 
                                (value_added / total_value_added_country) * 100,
                                NA)) %>% 
-    mutate(total_population_country = sum(value_added, na.rm = TRUE),
-           level_population_percentage = ifelse(!is.na(value_added), 
-                               (value_added / total_population_country) * 100,
+    mutate(total_population_country = sum(employed, na.rm = TRUE),
+           level_population_percentage = ifelse(!is.na(employed), 
+                               (employed / total_population_country) * 100,
                                NA)) 
   # Combine the data
   df4 <- rbind(df4, temp_df)
 }
+
+#growth rates
+df4 <- df4 %>%
+  group_by(country, nace_code) %>%
+  arrange(year) %>%
+  mutate(value_added_growth = (value_added/lag(value_added) - 1)*100,
+         population_growth = (employed/lag(employed) - 1)*100) %>%
+  ungroup()
 ```
 
 ## Individual Country Overview(Structural Development)
@@ -257,19 +269,19 @@ GGplot country comparisons
 
 
 # Subset the data
-df3_nor <- subset(df3, level == 1 & country == "Norway")
-df3_nor_2020 <- subset(df3, level == 1 & country == "Norway" & year == 2020)
+df4_nor <- subset(df4, level == 1 & country == "Norway")
+df4_nor_2020 <- subset(df4, level == 1 & country == "Norway" & year == 2020)
 
 # Sorting so that it is alpahbetically
-df3_nor_2020$nace_code <- factor(df3_nor_2020$nace_code, levels = rev(sort(unique(df3_nor_2020$nace_code))))
+df4_nor_2020$nace_code <- factor(df4_nor_2020$nace_code, levels = rev(sort(unique(df4_nor_2020$nace_code))))
 
 # Horizontal Bar Plot
-ggplot(df3_nor_2020, aes(x = nace_code, y = value_added, fill = factor(value_added))) +
+ggplot(df4_nor_2020, aes(x = nace_code, y = value_added, fill = factor(value_added))) +
   geom_col(position = "dodge") +
   coord_flip() +
   theme_minimal() +
   labs(
-    title = paste("Value Added in", df3_nor_2020$country, "based on NACE sectors", df3_nor_2020$year),
+    title = paste("Value Added in", df4_nor_2020$country, "based on NACE sectors", df4_nor_2020$year),
     y = "Value Added (in Million Euro)",
     x = "NACE Categories",
     fill = "Value Added"
@@ -277,7 +289,7 @@ ggplot(df3_nor_2020, aes(x = nace_code, y = value_added, fill = factor(value_add
   theme(legend.position = "none")
 
 # Create the pie chart
-ggplot(df3_nor_2020, aes(x = "", y = value_added, fill = factor(nace_code))) +
+ggplot(df4_nor_2020, aes(x = "", y = value_added, fill = factor(nace_code))) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start = 0) +
   theme_void() +
@@ -290,48 +302,83 @@ ggplot(df3_nor_2020, aes(x = "", y = value_added, fill = factor(nace_code))) +
 
 ### Area chart
 # Subset the data
-df3_nor_multiyear <- subset(df3, level == 1 & country == "Norway")
+df4_nor_multiyear <- subset(df4, level == 1 & country == "Norway")
 
 # Remove observations before 2008
-df3_nor_multiyear <- df3_nor_multiyear %>% 
+df4_nor_multiyear <- df4_nor_multiyear %>% 
   filter(year > 2011)
 
 # Convert 'year' to factor
-df3_nor_multiyear$year <- as.integer(df3_nor_multiyear$year)
+df4_nor_multiyear$year <- as.integer(df4_nor_multiyear$year)
 
 # Create an area chart
-ggplot(df3_nor_multiyear, aes(x = year, y = percentage, fill = nace_code)) +
+ggplot(df34nor_multiyear, aes(x = year, y = percentage, fill = nace_code)) +
   geom_area() +
   theme_minimal() +
   labs(
-    title = paste("Value Added in", unique(df3_nor_multiyear$country), "based on NACE sectors over time"),
+    title = paste("Value Added in", unique(df4_nor_multiyear$country), "based on NACE sectors over time"),
     y = "Value Added (%)",
     x = "Year",
     fill = "NACE Categories"
   ) +
-   scale_x_continuous(breaks = min(df3_nor_multiyear$year):max(df3_nor_multiyear$year)) +
+   scale_x_continuous(breaks = min(df4_nor_multiyear$year):max(df4_nor_multiyear$year)) +
   theme(legend.position = "bottom")
 
+```
+
+## Individual Country Overview(Structural Development) 2
+
+GGplot country comparisons, fills self
+
+```{r}
+#| echo: false
+
+### Dataframe to fill in ggplot titles and y
+ggplot_indicator <- data.frame(indicator = c("value_added","employed",        "value_per_employe","level_value_percentage","level_population_percentage"),
+                             title = c("Value Added","Number of Employed","Value Added per Employe","Percent of Value Added", "Percent of Employes"),
+                             y = c("Value Added (in Million Euro)", "Number of Employed", "Value Added per Employe (in Million Euro)", "Percent of Value Added", "Percent of Employes"))
+
+# Defining color palette based on nace_code to keep it
+palette <- rainbow(length(unique(df4_sub$nace_code)))
+
+library(colorspace)
+palette <- qualitative_hcl(length(unique(df4_sub$nace_code)))
 
 
 
-# Horizontal Bar Plot year interchangable
+
+
+
+### Horizontal Bar Plot year interchangable
+#descide year, countries and indicator
 year1 <- 2020
-country2 <- c("Norway", "Denmark", "Sweden", "Netherlands")
-df3_sub <- subset(df3,level == 1 & year == year1 & country %in% country2)
+country1 <- c("Norway", "Denmark", "Sweden", "Netherlands")
+unique(ggplot_indicator$indicator)
+#indicator1 <- "level_population_percentage"
+#indicator1 <- "level_value_percentage"
+indicator1 <- "value_per_employe"
 
-ggplot(df3_sub, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = value_added, fill = factor(value_added))) +
+# Defining GGplot inputs and creating ne wdataset
+y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
+title_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(title)
+df4_sub <- subset(df4,level == 1 & year == year1 & country %in% country1)
+#df4_sub <- subset(df4,nace_code == "M72" & year == year1 & country %in% country1)
+
+# ggplot
+ggplot(df4_sub, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code)) +
   geom_col(width = 0.6) +
   coord_flip() +
   theme_minimal() +
   facet_wrap(~ country) +
+  scale_fill_manual(values = palette) +
   labs(
-    title = paste("Value Added in each country based on NACE sectors", year1),
-    y = "Value Added (in Million Euro)",
+    title = paste(title_label,"in each country based on NACE sectors", year1),
+    y = y_label,
     x = "NACE Categories",
-    fill = "Value Added"
+    fill = "NACE Code"
   ) +
   theme(legend.position = "none")
+
 ```
 
 ## Country Comparison (Structural Development)
@@ -343,15 +390,15 @@ GGplot country comparisons
 
 
 # Norway datasett B
-# df3_nor_2020way_b <- df3 %>%
+# df4_nor_2020way_b <- df3 %>%
 #   filter(country == "Norway", nace_code == "B")
 
 # Norway and Sweden B
-df3_nor_2020_swe_b <- df3 %>%
+df4_nor_2020_swe_b <- df3 %>%
   filter(country %in% c("Norway", "Sweden", "Denmark", "Netherlands"), nace_code == "M72")
 
 # GGplot geom_line
-ggplot(df3_nor_2020_swe_b, aes(x = year, y = value_per_employe, colour = country)) +
+ggplot(df4_nor_2020_swe_b, aes(x = year, y = value_per_employe, colour = country)) +
   geom_line() +
   labs(title = "Value added over time per employee (NACE code M72)",
        x = "Year",
