@@ -1,0 +1,258 @@
+---
+title: "Test File"
+author: "Magne"
+format: html
+editor: visual
+---
+
+## Loading libraries
+
+Loading packages needed
+
+change
+
+```{r}
+#library(eurostat)
+#library(tidyverse)
+#library(magrittr)
+#library(httr)
+#library(rjstat)
+
+
+
+pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat)
+
+```
+
+## Downloading data
+
+Downloading data and making it into a dataframe
+
+Using
+
+```{r}
+#| echo: false
+
+# Eurostat data code:SBS_SC_SCA_R2
+# Eurostat query builder: https://ec.europa.eu/eurostat/web/query-builder/tool
+#old_url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&indic_sb=V12150&indic_sb=V16110&indic_sb=V91110&size_emp=TOTAL&nace_r2=B&nace_r2=C&nace_r2=D&lang=en"
+
+# Time option: since 2005
+# INDIC_SB:
+  # V12150 Value added at factor cost - million euro
+  # V16110 - Persons employed - number
+# SIZE_EMP : TOTAL
+# NACE_R2 : B-N_S95_X_K and all main sections divisions and groups (Main letters and up to 2 numbers B099 yes, C101 no)
+
+url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&sinceTimePeriod=2005&indic_sb=V12150&indic_sb=V16110&size_emp=TOTAL&nace_r2=B-N_S95_X_K&nace_r2=B&nace_r2=B05&nace_r2=B051&nace_r2=B052&nace_r2=B06&nace_r2=B061&nace_r2=B062&nace_r2=B07&nace_r2=B071&nace_r2=B072&nace_r2=B08&nace_r2=B081&nace_r2=B089&nace_r2=B09&nace_r2=B091&nace_r2=B099&nace_r2=C&nace_r2=C10&nace_r2=C11&nace_r2=C12&nace_r2=C13&nace_r2=C14&nace_r2=C15&nace_r2=C16&nace_r2=C17&nace_r2=C18&nace_r2=C19&nace_r2=C20&nace_r2=C21&nace_r2=C22&nace_r2=C23&nace_r2=C24&nace_r2=C25&nace_r2=C26&nace_r2=C27&nace_r2=C28&nace_r2=C29&nace_r2=C30&nace_r2=C31&nace_r2=C32&nace_r2=C33&nace_r2=D&nace_r2=D35&nace_r2=E&nace_r2=E36&nace_r2=E37&nace_r2=E38&nace_r2=E39&nace_r2=F&nace_r2=F41&nace_r2=F42&nace_r2=F43&nace_r2=G&nace_r2=G45&nace_r2=G46&nace_r2=G47&nace_r2=H&nace_r2=H49&nace_r2=H50&nace_r2=H51&nace_r2=H52&nace_r2=H53&nace_r2=I&nace_r2=I55&nace_r2=I56&nace_r2=J&nace_r2=J58&nace_r2=J59&nace_r2=J60&nace_r2=J61&nace_r2=J62&nace_r2=J63&nace_r2=L&nace_r2=L68&nace_r2=M&nace_r2=M69&nace_r2=M70&nace_r2=M71&nace_r2=M72&nace_r2=M73&nace_r2=M74&nace_r2=M75&nace_r2=N&nace_r2=N77&nace_r2=N78&nace_r2=N79&nace_r2=N80&nace_r2=N81&nace_r2=N82&nace_r2=S95&lang=en"
+getresponse <- GET(url)
+json <- content(getresponse, as = "text")
+df <- fromJSONstat(json)
+
+
+###Eurostat API
+# search_eurostat("Annual enterprise statistics by size class for special aggregates of activities") %>% 
+#   head()
+
+#api <- get_eurostat("sbs_sc_sca_r2")
+
+# a <- get_eurostat("SBS_SC_SCA_R2")
+#   filters = list(na_item = "B1GQ",
+#                             unit = "CP_MEUR", #wrong
+#                             geo = c("BE", "DE"),
+#                             time = c("2016", "2017"))) %>%
+#   head()
+
+
+
+```
+
+## Wrangling Data
+
+Creating cleaned df2
+
+Creating df2_no_NA
+
+```{r}
+#| echo: false
+
+#colnames(df)
+
+### Removing and renaming colomns
+# Removing duplicates
+df1 <- df %>%
+  distinct()
+df1$`Time frequency` <- NULL
+df1$`Size classes in number of persons employed` <- NULL
+df1 <- df1 %>% 
+  rename(category = "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+  indicator = "Economical indicator for structural business statistics",
+  country = "Geopolitical entity (reporting)",
+  year = "Time",
+  value_added1 = "value")
+
+### Find and remove fake duplicates with one NA and one non NA value
+df1 <- df1 %>% distinct(category, country, year, indicator, .keep_all = TRUE)
+
+
+### Make the indicators into new Columns to cut down number of observations
+df2 <- df1 %>% 
+  pivot_wider(names_from = indicator, values_from = value_added1)
+
+df2$`Apparent labour productivity (Gross value added per person employed) - thousand euro` <- NULL
+
+df2 <- df2 %>% 
+  rename(value_added = "Value added at factor cost - million euro",
+  employed = "Persons employed - number")
+
+df2$value_per_employe <- df2$value_added/df2$employed
+
+# Fix year to be numeric
+df2 <- df2 %>%
+  mutate(year = as.numeric(year))
+
+
+### Removing all NA observations for quick view
+#df2_no_NA <- df2 %>% filter(!(is.na(value_added) & is.na(value_per_employe)))
+
+# Example to filter out just one nation
+#df1 <- df %>% 
+  #filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
+
+```
+
+## Adding Letter Codes to Dataset
+
+Import nace letter codes and add them to our dataset
+
+Creating nace_codes2
+
+Creating new df4 with letter codes
+
+```{r}
+#| echo: false
+
+# Import nace files and make names lower case
+nace_codes <- read.csv("nace codes.csv")
+nace_codes1 <- nace_codes
+names(nace_codes1) <- tolower(names(nace_codes1))
+
+#colnames(nace_codes)
+
+# Add section to all observations
+nace_codes1$section <- ifelse((nace_codes1$section == ""), NA, nace_codes1$section)
+nace_codes1 <- nace_codes1 %>%
+  fill(section, .direction = "down")
+
+# Add group value of the subsequent value as long as class is not NA
+for (i in 2:nrow(nace_codes1)) {
+  if (!is.na(nace_codes1$class[i])) {
+    nace_codes1$group[i] <- nace_codes1$group[i - 1]
+  }
+}
+
+# Add division value of the subsequent divison as long as group is not NA
+for (i in 2:nrow(nace_codes1)) {
+  if (!is.na(nace_codes1$group[i])) {
+    nace_codes1$division[i] <- nace_codes1$division[i - 1]
+  }
+}
+
+
+
+# Could not get this code to work without replacing everything, which is problematic as it removed the top empty categories
+#nace_codes1 <- nace_codes1 %>%
+  #fill(division, .direction = "down")
+
+# Combine variables to create unified nace_code
+nace_codes1$nace_code <- paste(nace_codes1$section, ifelse(is.na(nace_codes1$group), ifelse(is.na(nace_codes1$division), "", nace_codes1$division), nace_codes1$group), sep = "")
+
+# Lowercase as thedata set uses different capitalization p1...
+nace_codes2 <- nace_codes1
+nace_codes2$activity <- tolower(nace_codes2$activity)
+
+# If a group has same name(activity) as division, then remove group observation
+nace_codes2 <- nace_codes2 %>%
+  group_by(activity) %>%
+  filter(is.na(group) | row_number() == 1) %>%
+  ungroup()
+
+nace_codes2 <- nace_codes2 %>%
+  group_by(activity) %>%
+  filter(is.na(division) | row_number() == 1) %>%
+  ungroup()
+
+# Removing duplicates
+nace_codes2 <- nace_codes2 %>% 
+  filter(is.na(class))
+
+# Remove unused variables
+nace_codes2 <- nace_codes2 %>%
+  select(-class, -isicrev..4)
+
+# Put nace_code first
+nace_codes2 <- nace_codes2 %>%
+  select(nace_code, everything())
+
+
+# Subset nace_codes2 to include only the rows where 'activity' is duplicated
+duplicated_nace_codes2 <- nace_codes2[duplicated(nace_codes2$activity) | duplicated(nace_codes2$activity, fromLast = TRUE), ]
+
+
+
+### Check for nace_code name(activity), then merge nace_codes 2 variables with main dataframe
+# Lowercase as thedata set uses different capitalization p2...
+df2$category_lower <- tolower(df2$category)
+# Merge
+df3 <- merge(x = df2, y = nace_codes2, by.x = "category_lower", by.y = "activity", all = FALSE)
+
+
+df3 <- df3 %>%
+  select(-category_lower)
+
+# Reorder and renaming
+df3 <- df3 %>% 
+  select(year, country, nace_code, section, division, group, everything())
+df3 <- df3 %>% 
+  rename(name = category)
+```
+
+## GGPLOT and Trend Exploration
+
+Import nace letter codes and add them to our dataset
+
+```{r}
+#| echo: false
+
+
+# Norway datasett B
+df3_norway_b <- df3 %>%
+  filter(country == "Norway", nace_code == "B")
+
+# Norway and Sweden B
+df3_nor_swe_b <- df3 %>%
+  filter(country %in% c("Norway", "Sweden"), nace_code == "B")
+
+colnames(df3)
+
+# GGplot geom_line
+ggplot(df3_nor_swe_b, aes(x = year, y = value_per_employe, colour = country)) +
+  geom_line() +
+  labs(title = "Value added over time per employee (NACE code B)",
+       x = "Year",
+       y = "Value Added") +
+  theme_minimal()
+
+
+```
+
+## Dashboard (Shiny)
+
+Make shiny dashboard
+
+```{r}
+#| echo: false
+
+
+
+```

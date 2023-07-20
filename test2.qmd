@@ -18,13 +18,7 @@ change
 #library(httr)
 #library(rjstat)
 
-library(knitr)
-library(kableExtra)
-library(magick)
-library(htmltools)
 
-library(webshot)
-library(gt)
 
 pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat)
 
@@ -65,9 +59,7 @@ head(df)
 
 ## Wrangling Data
 
-Hei
-
-Wrangling
+Creating cleaned df3
 
 ```{r}
 #| echo: false
@@ -85,7 +77,7 @@ df1 <- df1 %>%
   year = "Time",
   value_added1 = "value")
 
-# Make the indicators into new Columns to cut down number of rows
+# Make the indicators into new Columns to cut down number of observations
 df2 <- df1 %>% 
   pivot_wider(names_from = indicator, values_from = value_added1)
 
@@ -107,24 +99,70 @@ df3 <- df2 %>%
 
 ```
 
-## Make Pretty DF
+## Adding Letter Codes to Dataset
 
-Something Something
+Import nace letter codes and add them to our dataset
+
+Creating nace_codes2
+
+Creating new df4 with letter codes
 
 ```{r}
 #| echo: false
 
-# 10 first rows
-df_first_10 <- head(df, 10)
+# Import nace files and make names lower case
+nace_codes <- read.csv("nace codes.csv")
+nace_codes1 <- nace_codes
+names(nace_codes1) <- tolower(names(nace_codes1))
+
+#colnames(nace_codes)
+
+# Add section to all observations
+nace_codes1$section <- ifelse((nace_codes1$section == ""), NA, nace_codes1$section)
+nace_codes1 <- nace_codes1 %>%
+  fill(section, .direction = "down")
+
+# Add group value of the subsequent value as long as class is not NA
+for (i in 2:nrow(nace_codes1)) {
+  if (!is.na(nace_codes1$class[i])) {
+    nace_codes1$group[i] <- nace_codes1$group[i - 1]
+  }
+}
+
+# Add division value of the subsequent divison as long as group is not NA
+for (i in 2:nrow(nace_codes1)) {
+  if (!is.na(nace_codes1$group[i])) {
+    nace_codes1$division[i] <- nace_codes1$division[i - 1]
+  }
+}
+
+# Could not get this code to work without replacing everything, which is problematic as it removed the top empty categories
+#nace_codes1 <- nace_codes1 %>%
+  #fill(division, .direction = "down")
+
+# Combine variables to create unified nace_code
+nace_codes1$nace_code <- paste(nace_codes1$section, ifelse(is.na(nace_codes1$group), ifelse(is.na(nace_codes1$division), "", nace_codes1$division), nace_codes1$group), sep = "")
+# Remove unused variables
+nace_codes2 <- nace_codes1 %>%
+  select(-class, -isicrev..4)
+
+# Put nace_code first
+nace_codes2 <- nace_codes2 %>%
+  select(nace_code, everything())
 
 
-# Convert the dataframe to a tableGrob (graphical object)
-table <- tableGrob(df_first_10)
+### Check for nace_code name(activity), then merge nace_codes 2 variables with main dataframe
+# Lowercase
+df3$category_lower <- tolower(df3$category)
+nace_codes2$activity_lower <- tolower(nace_codes2$activity)
+# Merge
+df4 <- merge(x = df3, y = nace_codes2, by.x = "category_lower", by.y = "activity_lower", all.x = TRUE)
+df4 <- df4 %>%
+  select(-category_lower, -activity)
 
-# Save this graphical object as an image
-png(filename = "df_image.png", width = 800, height = 600)
-grid.draw(df)
-dev.off()
-
-library(grid)
+# Reorder and renaming
+df4 <- df4 %>% 
+  select(year, country, nace_code, section, division, group, everything())
+df4 <- df4 %>% 
+  rename(name = category)
 ```
