@@ -18,11 +18,9 @@ change
 #library(httr)
 #library(rjstat)
 
-library(rlang)
+library(mice)
 
-
-
-pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat)
+pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat, rlang, colorspace)
 
 ```
 
@@ -200,6 +198,14 @@ nace_codes2$level <- nchar(gsub("\\.", "", nace_codes2$nace_code)) #ignore .
 nace_codes2 <- nace_codes2 %>%
   select(level, nace_code, everything())
 
+# Add all NACE code 
+total_name <- "Total business economy; repair of computers, personal and household goods; except financial and insurance activities"
+total_nace_code <- "B-N_S95_X_K" #set as level 0, manually set this afterwards
+
+# 
+
+
+
 ## Subset nace_codes2 to include only the rows where 'activity' is duplicated
 duplicated_nace_codes2 <- nace_codes2[duplicated(nace_codes2$activity) | duplicated(nace_codes2$activity, fromLast = TRUE), ]
 
@@ -251,13 +257,26 @@ for(l in unique(df3$level)) {
   df4 <- rbind(df4, temp_df)
 }
 
-#growth rates
+# Growth rates
 df4 <- df4 %>%
   group_by(country, nace_code) %>%
   arrange(year) %>%
   mutate(value_added_growth = (value_added/lag(value_added) - 1)*100,
          population_growth = (employed/lag(employed) - 1)*100) %>%
   ungroup()
+
+df4a <- df4 %>% 
+  filter(level == 1 & country == "Norway" & year == 2020)
+
+sum(df4a$employed)
+
+
+df2a <- df2 %>% 
+  filter(country == "Norway" & year == 2020)
+
+sum(df2a$employed)
+
+
 ```
 
 ## Individual Country Overview(Structural Development)
@@ -312,7 +331,7 @@ df4_nor_multiyear <- df4_nor_multiyear %>%
 df4_nor_multiyear$year <- as.integer(df4_nor_multiyear$year)
 
 # Create an area chart
-ggplot(df34nor_multiyear, aes(x = year, y = percentage, fill = nace_code)) +
+ggplot(df4_nor_multiyear, aes(x = year, y = percentage, fill = nace_code)) +
   geom_area() +
   theme_minimal() +
   labs(
@@ -341,11 +360,8 @@ ggplot_indicator <- data.frame(indicator = c("value_added","employed",        "v
 # Defining color palette based on nace_code to keep it
 palette <- rainbow(length(unique(df4_sub$nace_code)))
 
-library(colorspace)
+
 palette <- qualitative_hcl(length(unique(df4_sub$nace_code)))
-
-
-
 
 
 
@@ -354,9 +370,10 @@ palette <- qualitative_hcl(length(unique(df4_sub$nace_code)))
 year1 <- 2020
 country1 <- c("Norway", "Denmark", "Sweden", "Netherlands")
 unique(ggplot_indicator$indicator)
+# TODO percentage is wrong
 #indicator1 <- "level_population_percentage"
-#indicator1 <- "level_value_percentage"
-indicator1 <- "value_per_employe"
+indicator1 <- "level_value_percentage"
+#indicator1 <- "value_per_employe"
 
 # Defining GGplot inputs and creating ne wdataset
 y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
@@ -406,19 +423,85 @@ ggplot(df4_nor_2020_swe_b, aes(x = year, y = value_per_employe, colour = country
   theme_minimal()
 
 
+
+
+
+
+
+
+
 ## Maskinlæring
 # Se på norge og sverige Fou (forsking og utvikling) og om det er noen forksjeller der
 
 # Explorativt 
 ```
 
-## Dashboard (Shiny)
+## Imputation Test
 
-Make shiny dashboard
+Testing
 
 ```{r}
 #| echo: false
 
+### IMPUTATION
+df4_swe_m72 <- df4 %>% 
+  filter(country == "Sweden", nace_code == "M72")
+
+library(mice)
+# Create a complete data frame with all years
+df_full <- data.frame(year = 2005:2020)
+
+# Left join your data with the full dataset
+df_joined <- left_join(df_full, df4_swe_m72, by = "year")
+
+# Generate a default predictor matrix
+predMatrix <- mice::make.predictorMatrix(df_joined)
+
+# Verify that predMatrix is indeed a matrix
+if(!is.matrix(predMatrix)) {
+  stop("predMatrix is not a matrix")
+}
+
+# Set all predictors to 0 (no variables will be imputed)
+predMatrix[,] <- 0
+
+# Set value_added to 1 (only this variable will be imputed)
+predMatrix["value_added",] <- 1
+
+# Perform the imputation
+imp <- mice(df_joined, method='norm.predict', m=5, predictorMatrix = predMatrix)
+
+# Complete the data with the imputed values
+df_imputation <- complete(imp, 1)
 
 
 ```
+
+## Interpolation Test
+
+Testing
+
+```{r}
+#| echo: false
+
+### Interpolation see the trend
+df4_swe_m72 <- df4 %>% 
+  filter(country == "Sweden", nace_code == "M72")
+
+library(imputeTS)
+
+# Create a complete data frame with all years
+df_years <- data.frame(year = 2005:2020)
+
+# Left join your data with the full dataset
+df_interpolation <- left_join(df_full, df4_swe_m72, by = "year")
+
+# Use na.interpolation to impute value_added variable
+df_interpolation$value_added <- na_interpolation(df_interpolation$value_added)
+# NA observation before first observation with value gets the value of the first observation with a value
+# It create the linear trend for NA observations between observations with value
+```
+
+## Dashboard (Shiny)
+
+Make shiny dashboard
