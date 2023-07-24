@@ -1,7 +1,7 @@
 ---
 title: "Test File"
 author: "Magne"
-format: html
+format: pdf
 editor: visual
 ---
 
@@ -51,17 +51,12 @@ df <- fromJSONstat(json)
 
 
 ###Eurostat API
-# search_eurostat("Annual enterprise statistics by size class for special aggregates of activities") %>% 
-#   head()
-
-#api <- get_eurostat("sbs_sc_sca_r2")
-
-# a <- get_eurostat("SBS_SC_SCA_R2")
-#   filters = list(na_item = "B1GQ",
-#                             unit = "CP_MEUR", #wrong
-#                             geo = c("BE", "DE"),
-#                             time = c("2016", "2017"))) %>%
-#   head()
+## Note: Initialy importing the file through API is alot slower than using the Eurostat query builder
+# api <- get_eurostat("sbs_sc_sca_r2")
+#   filters = list(geo = "NO") # I can't get filters function to work
+#   
+# api2 <- api %>% 
+#   filter(geo == "NO")
 
 
 
@@ -70,8 +65,6 @@ df <- fromJSONstat(json)
 ## Wrangling Data
 
 Creating cleaned df2
-
-Creating df2_no_NA
 
 ```{r}
 #| echo: false
@@ -107,18 +100,9 @@ df2 <- df2 %>%
 
 df2$value_per_employe <- df2$value_added/df2$employed
 
-
 # Fix year to be numeric
 df2 <- df2 %>%
   mutate(year = as.numeric(year))
-
-
-### Removing all NA observations for quick view
-#df2_no_NA <- df2 %>% filter(!(is.na(value_added) & is.na(value_per_employe)))
-
-# Example to filter out just one nation
-#df1 <- df %>% 
-  #filter(`Geopolitical entity (reporting)` == "Belgium") #Use ` not '
 
 ```
 
@@ -133,89 +117,58 @@ Creating new df3 with letter codes
 ```{r}
 #| echo: false
 
-# Import nace files and make names lower case
+# Import nace files and make names lower case, add A to all coresponding sections
 nace_codes <- read.csv("nace codes.csv")
-nace_codes1 <- nace_codes
-names(nace_codes1) <- tolower(names(nace_codes1))
-
-#colnames(nace_codes)
-
-# Add section to all observations
-nace_codes1$section <- ifelse((nace_codes1$section == ""), NA, nace_codes1$section)
-nace_codes1 <- nace_codes1 %>%
+nace_codes1 <- nace_codes %>% 
+  rename_all(tolower) %>%
+  mutate(section = ifelse((section == ""), NA, section)) %>%
   fill(section, .direction = "down")
 
-# Add group value of the subsequent value as long as class is not NA
+# Add group value of the subsequent value and divisions as long as class is not NA
 for (i in 2:nrow(nace_codes1)) {
   if (!is.na(nace_codes1$class[i])) {
-    nace_codes1$group[i] <- nace_codes1$group[i - 1]
-  }
-}
-
-# Add division value of the subsequent divison as long as group is not NA
-for (i in 2:nrow(nace_codes1)) {
+    nace_codes1$group[i] <- nace_codes1$group[i - 1]}
   if (!is.na(nace_codes1$group[i])) {
-    nace_codes1$division[i] <- nace_codes1$division[i - 1]
-  }
-}
-
-
-# Could not get this code to work without replacing everything, which is problematic as it removed the top empty categories
-#nace_codes1 <- nace_codes1 %>%
-  #fill(division, .direction = "down")
+    nace_codes1$division[i] <- nace_codes1$division[i - 1]}}
 
 # Combine variables to create unified nace_code
 nace_codes1$nace_code <- paste(nace_codes1$section, ifelse(is.na(nace_codes1$group), ifelse(is.na(nace_codes1$division), "", nace_codes1$division), nace_codes1$group), sep = "")
 
 # Lowercase as thedata set uses different capitalization p1...
-nace_codes2 <- nace_codes1
-nace_codes2$activity <- tolower(nace_codes2$activity)
+nace_codes2 <- nace_codes1 %>% mutate(activity = tolower(activity))
 
 # If a group has same name(activity) as division, then remove group observation
 nace_codes2 <- nace_codes2 %>%
   group_by(activity) %>%
-  filter(is.na(group) | row_number() == 1) %>%
-  ungroup()
+  filter((is.na(group) | row_number() == 1) & (is.na(division) | row_number() == 1)) %>% ungroup()
 
-nace_codes2 <- nace_codes2 %>%
-  group_by(activity) %>%
-  filter(is.na(division) | row_number() == 1) %>%
-  ungroup()
-
-# Removing duplicates
+# Removing duplicates and remove unused variables
 nace_codes2 <- nace_codes2 %>% 
-  filter(is.na(class))
-
-# Remove unused variables
-nace_codes2 <- nace_codes2 %>%
+  filter(is.na(class)) %>%
   select(-class, -isicrev..4)
 
-
-# Add NACE level 1-3
+# Add NACE level 1-3 based on length of nace_code
 nace_codes2$level <- nchar(gsub("\\.", "", nace_codes2$nace_code)) #ignore .
 
-# Put nace_code first
-nace_codes2 <- nace_codes2 %>%
+# Add all NACE code 
+total_name <- "total business economy; repair of computers, personal and household goods; except financial and insurance activities"
+total_nace_code <- "B-N_S95_X_K" #set as level 0, manually set this afterwards
+nace_codes2 <- rbind(nace_codes2, data.frame(level = 0, nace_code = total_nace_code, section = "B-N_S95_X_K", division = NA, group = NA, activity = total_name)) %>% 
   select(level, nace_code, everything())
 
-# Add all NACE code 
-total_name <- "Total business economy; repair of computers, personal and household goods; except financial and insurance activities"
-total_nace_code <- "B-N_S95_X_K" #set as level 0, manually set this afterwards
-
-# 
 
 
+nace_codes2_example <- nace_codes2 %>% 
+  mutate(section = ifelse(section == "B-N_S95_X_K", ".B-N_S95_X_K", section)) %>% 
+  filter(section %in% c(".B-N_S95_X_K", "A", "B"))
 
-## Subset nace_codes2 to include only the rows where 'activity' is duplicated
-duplicated_nace_codes2 <- nace_codes2[duplicated(nace_codes2$activity) | duplicated(nace_codes2$activity, fromLast = TRUE), ]
 
 
 ### Check for nace_code name(activity), then merge nace_codes 2 variables with main dataframe
-# Lowercase as thedata set uses different capitalization p2...
+# Lowercase as the data set uses different capitalization p2...
 df2$category_lower <- tolower(df2$category)
 # Merge
 df3 <- merge(x = df2, y = nace_codes2, by.x = "category_lower", by.y = "activity", all = FALSE)
-
 
 df3 <- df3 %>%
   select(-category_lower)
@@ -239,11 +192,13 @@ Added growth rates to df4, not this has not been cleaned, there are some
 
 ### Creating value added and population percentage for each level
 df4 <- data.frame()
+
 # Loop over each level
 for(l in unique(df3$level)) {
+  for (y in unique(df3$year)) {
   # Filter the data for the current level
   temp_df <- df3 %>%
-    filter(level == l) %>%
+    filter(level == l & year == y) %>%
     group_by(country) %>%
     mutate(total_value_added_country = sum(value_added, na.rm = TRUE),
            level_value_percentage = ifelse(!is.na(value_added), 
@@ -253,8 +208,11 @@ for(l in unique(df3$level)) {
            level_population_percentage = ifelse(!is.na(employed), 
                                (employed / total_population_country) * 100,
                                NA)) 
+  # Remove unecesary paramters
+  temp_df <- temp_df %>% select(-total_value_added_country, -total_population_country)
   # Combine the data
   df4 <- rbind(df4, temp_df)
+  }
 }
 
 # Growth rates
@@ -265,18 +223,15 @@ df4 <- df4 %>%
          population_growth = (employed/lag(employed) - 1)*100) %>%
   ungroup()
 
-df4a <- df4 %>% 
-  filter(level == 1 & country == "Norway" & year == 2020)
 
-sum(df4a$employed)
+### Removing all NA value_added observations for quick view
+df4_no_NA <- df4 %>%
+  filter(!(is.na(value_added) & is.na(value_per_employe)))
 
+df4_no_NA <- df4_no_NA %>% 
+  filter(country == "Norway" & year > 2009)
 
-df2a <- df2 %>% 
-  filter(country == "Norway" & year == 2020)
-
-sum(df2a$employed)
-
-
+df4
 ```
 
 ## Individual Country Overview(Structural Development)
@@ -331,7 +286,7 @@ df4_nor_multiyear <- df4_nor_multiyear %>%
 df4_nor_multiyear$year <- as.integer(df4_nor_multiyear$year)
 
 # Create an area chart
-ggplot(df4_nor_multiyear, aes(x = year, y = percentage, fill = nace_code)) +
+ggplot(df4_nor_multiyear, aes(x = year, y = level_population_percentage, fill = nace_code)) +
   geom_area() +
   theme_minimal() +
   labs(
@@ -357,20 +312,17 @@ ggplot_indicator <- data.frame(indicator = c("value_added","employed",        "v
                              title = c("Value Added","Number of Employed","Value Added per Employe","Percent of Value Added", "Percent of Employes"),
                              y = c("Value Added (in Million Euro)", "Number of Employed", "Value Added per Employe (in Million Euro)", "Percent of Value Added", "Percent of Employes"))
 
+
 # Defining color palette based on nace_code to keep it
-palette <- rainbow(length(unique(df4_sub$nace_code)))
-
-
-palette <- qualitative_hcl(length(unique(df4_sub$nace_code)))
-
+#palette <- rainbow(length(unique(subset(df4, subset = level == 1)$nace_code)))
+palette <- qualitative_hcl(length(unique(subset(df4, subset = level == 1)$nace_code)))
 
 
 ### Horizontal Bar Plot year interchangable
-#descide year, countries and indicator
+## Descide year, countries and indicator
 year1 <- 2020
 country1 <- c("Norway", "Denmark", "Sweden", "Netherlands")
 unique(ggplot_indicator$indicator)
-# TODO percentage is wrong
 #indicator1 <- "level_population_percentage"
 indicator1 <- "level_value_percentage"
 #indicator1 <- "value_per_employe"
@@ -380,6 +332,8 @@ y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
 title_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(title)
 df4_sub <- subset(df4,level == 1 & year == year1 & country %in% country1)
 #df4_sub <- subset(df4,nace_code == "M72" & year == year1 & country %in% country1)
+
+
 
 # ggplot
 ggplot(df4_sub, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code)) +
@@ -406,34 +360,18 @@ GGplot country comparisons
 #| echo: false
 
 
-# Norway datasett B
-# df4_nor_2020way_b <- df3 %>%
-#   filter(country == "Norway", nace_code == "B")
-
 # Norway and Sweden B
-df4_nor_2020_swe_b <- df3 %>%
-  filter(country %in% c("Norway", "Sweden", "Denmark", "Netherlands"), nace_code == "M72")
+df4_compare <- df4 %>%
+  filter(country %in% c("Norway", "Sweden", "Denmark", "Netherlands"), nace_code == "C")
 
 # GGplot geom_line
-ggplot(df4_nor_2020_swe_b, aes(x = year, y = value_per_employe, colour = country)) +
+ggplot(df4_compare, aes(x = year, y = value_per_employe, colour = country)) +
   geom_line() +
-  labs(title = "Value added over time per employee (NACE code M72)",
+  labs(title = "Efficiency (NACE code C)",
        x = "Year",
-       y = "Value Added (in Million Euro)") +
+       y = "Efficiency") +
   theme_minimal()
 
-
-
-
-
-
-
-
-
-## Maskinlæring
-# Se på norge og sverige Fou (forsking og utvikling) og om det er noen forksjeller der
-
-# Explorativt 
 ```
 
 ## Imputation Test
@@ -500,6 +438,40 @@ df_interpolation <- left_join(df_full, df4_swe_m72, by = "year")
 df_interpolation$value_added <- na_interpolation(df_interpolation$value_added)
 # NA observation before first observation with value gets the value of the first observation with a value
 # It create the linear trend for NA observations between observations with value
+```
+
+## Making Nice Table Image
+
+Image
+
+```{r}
+#| echo: false
+
+library(gt)
+library(magick)
+
+df5 <- df4 %>% 
+  filter(level == 0 & country == "Norway")
+
+
+gt_table <- gt(df5)
+
+# Convert the gt table to HTML
+html <- as_raw_html(gt_table)
+
+# Read the HTML as an image
+img <- image_read(html)
+
+# Write the image to a file
+image_write(img, path = "table.png")
+
+library(knitr)
+library(kableExtra)
+library(magrittr)
+
+
+
+
 ```
 
 ## Dashboard (Shiny)
