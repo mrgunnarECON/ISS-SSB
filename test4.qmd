@@ -52,11 +52,17 @@ df <- fromJSONstat(json)
 
 ###Eurostat API
 ## Note: Initialy importing the file through API is alot slower than using the Eurostat query builder
-# api <- get_eurostat("sbs_sc_sca_r2")
-#   filters = list(geo = "NO") # I can't get filters function to work
-#   
-# api2 <- api %>% 
-#   filter(geo == "NO")
+comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
+comparable_countries_short <- c("NO", "FI", "SE", "DK", "LU", "NL", "IS", "IE", "BE", "DE", "EE")
+api <- get_eurostat("sbs_sc_sca_r2",
+  filters = list(size_emp = "TOTAL",
+                 geo = comparable_countries_short),
+  cache = FALSE
+  )
+
+# I can't get filters function to work properly
+api2 <- api %>%
+  filter(geo == "NO")
 
 
 
@@ -267,7 +273,7 @@ ggplot(df4_nor_2020, aes(x = "", y = value_added, fill = factor(nace_code))) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start = 0) +
   theme_void() +
-  labs(title = paste("Value Added in", df3_nor_2020$country, "based on NACE sectors", df3_nor_2020$year),
+  labs(title = paste("Value Added in", df4_nor_2020$country, "based on NACE sectors", df4_nor_2020$year),
        x = NULL, 
        y = "Value Added (in Million Euro)", 
        fill = "NACE Categories") +
@@ -322,10 +328,10 @@ palette <- qualitative_hcl(length(unique(subset(df4, subset = level == 1)$nace_c
 ## Descide year, countries and indicator
 year1 <- 2020
 country1 <- c("Norway", "Denmark", "Sweden", "Netherlands")
-unique(ggplot_indicator$indicator)
+##unique(ggplot_indicator$indicator) # See what indicators you can use
 #indicator1 <- "level_population_percentage"
-indicator1 <- "level_value_percentage"
-#indicator1 <- "value_per_employe"
+#indicator1 <- "level_value_percentage"
+indicator1 <- "value_per_employe"
 
 # Defining GGplot inputs and creating ne wdataset
 y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
@@ -453,7 +459,6 @@ library(magick)
 df5 <- df4 %>% 
   filter(level == 0 & country == "Norway")
 
-
 gt_table <- gt(df5)
 
 # Convert the gt table to HTML
@@ -477,3 +482,25 @@ library(magrittr)
 ## Dashboard (Shiny)
 
 Make shiny dashboard
+
+From dropdown get the choice of category like this format: (M72) Research and Decelopments
+
+```{r}
+#| echo: false
+
+
+
+```
+
+## Regression GLM model
+
+Add total economy as a variable to all observations, then run regression on individual variables on how it impacts the total economy
+
+Test M72 population %
+
+```{r}
+#| echo: false
+
+
+
+```
