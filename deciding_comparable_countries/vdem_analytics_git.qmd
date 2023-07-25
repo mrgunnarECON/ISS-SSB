@@ -160,7 +160,7 @@ save(data, file = "relevant_data.rds")
 ```
 
 ```{r}
-load("relevant_data (1).rds")
+load("relevant_data.rds")
 ```
 
 ### Creating the mean
