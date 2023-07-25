@@ -17,17 +17,17 @@ A suggestion given in the task is to look at Norway's biggest trading partners. 
 
 Is looking at trading partners really a good metric? Probably not.
 
-The reason why we trade with other countries is because either we produce goods they do not produce enough of, or the opposite. That creates a need to buy them from someone who do produce more than enough. Then we already know that there is a difference in the industries between these countries. Looking at trading partners will then only tell us who we buy the stuff we need from, or sell to.
+The reason why we trade with other countries is because, either we produce goods they do not produce enough of, or the opposite. That creates a need to buy them from someone who do produce more than enough. Then we already know that there is a difference in the industries between these countries. Looking at trading partners will then only tell us who we buy the stuff we need from, or sell to.
 
 Norway will also naturally trade more with countries that share a trading agreement or are in close proximity, that will mostly be EU/EEA countries.
 
 So, although we should not base our comparisons on trading partners, it can be a good staring point.
 
-Here is a vector of all EU, EEA countries and Norway's other main trading partners.
+Here is a vector of EU and EEA countries. Lichtenstein did unfortunately not work for this analysis, and is therefore excluded.
 
 ```{r}
 # Creating a vector of relevant countries
-countries <- c("Austria", "Belgium", "Bulgaria", "Canada", "China", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia" ,"Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Norway", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden", "United Kingdom", "United States of America")
+countries <- c("Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia" ,"Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Norway", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden", "United Kingdom")
 ```
 
 ## V-Dem
@@ -51,6 +51,8 @@ We have picked out variables in four different categories:
 Here is a description of all the variables used in our analysis, and why they can be relevant.
 
 #### Economic and Demographic:
+
+e_area: **Land area** - Measures the total area of land within a specific geographical region or country, providing insights into the physical expanse available for various economic, agricultural, and developmental activities.
 
 e_gdppc: **GDP per capita** - A measure of a country's economic output per person, providing insights into the standard of living and economic development.
 
@@ -111,14 +113,20 @@ e_wbgi_cce: **Control of corruption** - Measures the effectiveness of controllin
 Here we gather the data in order to start analyzing it.
 
 ```{r}
+
 ## Working in the right directory local on the computer
-setwd("/home/julsofpet/julie/ISSSV1337/Political_structure")
+setwd("/home/julsofpet/ISS-SSB/deciding_comparable_countries")
 
 ## I need the tidyverse package
 library(tidyverse)
+```
+
+```{r}
+# The original data frame is to large to run in git, therefore the first wrangling is done locally and then the file will be loaded into this document
+#|eval: false
 
 ## Loading in data
-data <- readRDS("V-Dem-CY-Full+Others-v13.rds")
+load("V-Dem-CY-Full+Others-v13.rds")
 ```
 
 ### Selecting the relevant variables and observations
@@ -130,6 +138,9 @@ We will filter out years before 2005 because we do not have the right data avail
 We will then select the variables we want to analyze.
 
 ```{r}
+#This was also done in the local file
+#| eval: false
+
 ## Taking out countries I need for my analysis 
 data <- data %>%
   filter(country_name %in% countries)
@@ -142,10 +153,14 @@ data <- data %>%
 
 ## Choosing variables to include in analysis
 data <- data %>%
-  select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
+  select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
 
 
-save(data, file = "relevant_data.rda")
+save(data, file = "relevant_data.rds")
+```
+
+```{r}
+load("relevant_data.rds")
 ```
 
 ### Creating the mean
@@ -162,7 +177,7 @@ df_means <- data %>%
   group_by(country_name) %>%
   
   # Calculate the mean of each of the variable of all the years
-  summarise(across(.cols = c("v2x_libdem", "v2x_egaldem", "v2elfrfair", "v2exbribe", "v2excrptps", "v2clrelig", "v2clfmove", "v2pepwrses", "v2peedueq", "v2peasbecon", "v2xnp_pres", "v2xnp_regcorr", "v2clstown", "v2svdomaut", "v2svstterr", "v2mecorrpt", "v2cagenmob", "v2catrauni", "e_wbgi_cce", "e_gdppc", "e_miinflat", "e_pop", "e_total_resources_income_pc", "e_pelifeex"), .fns = mean, na.rm = TRUE))
+  summarise(across(.cols = c("v2x_libdem", "v2x_egaldem", "v2elfrfair", "v2exbribe", "v2excrptps", "v2clrelig", "v2clfmove", "v2pepwrses", "v2peedueq", "v2peasbecon", "v2xnp_pres", "v2xnp_regcorr", "v2clstown", "v2svdomaut", "v2svstterr", "v2mecorrpt", "v2cagenmob", "v2catrauni", "e_area", "e_wbgi_cce", "e_gdppc", "e_miinflat", "e_pop", "e_total_resources_income_pc", "e_pelifeex"), .fns = mean, na.rm = TRUE))
 
 ```
 
@@ -181,7 +196,7 @@ The others only have the variables in each category as described in the variable
 
 # All variables
 df_noname <- df_means %>%
-  select(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
+  select(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
 
 # All variables in corruption category
 df_corr <- df_means %>% 
@@ -189,7 +204,7 @@ df_corr <- df_means %>%
 
 # All variables in economic and demographic category
 df_econ_dem <- df_means %>% 
-  select(e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)
+  select(e_area, e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)
 
 # All variables in political governance category
 df_poli_gov <- df_means %>% 
@@ -209,7 +224,7 @@ We will calculate the difference in the values between the countries and Norway.
 
 For example the country that is most similar will receive the score 2 (since Norway will be no. 1).
 
-In order to create a total ranking we will add up all the rankings, and give each country a total score. In the total ranking, we rank by 24 different variables, and then the lowest possible score is 24 (this will be given to Norway).
+In order to create a total ranking we will add up all the rankings, and give each country a total score. In the total ranking, we rank by 25 different variables, and then the lowest possible score is 25 (this will be given to Norway).
 
 In the end, the countries with the lowest scores will be the most similar to Norway.
 
@@ -220,7 +235,7 @@ After reciveing a score we will combine the data frames with the vector containi
 Each category will also be ranked in the exact same way (using the same function), and receive a ranking based only on all the variables in each category.
 
 ```{r}
-# The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 24th element in each column. The 24th element in Norway's value. 
+# The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element in Norway's value. 
 
 final_ranking <- function(s) {
   
@@ -228,7 +243,7 @@ final_ranking <- function(s) {
   df_rank <- apply(s, MARGIN = 2, FUN = function(x){
     
     # Store the 24th element in the column (null point)
-    null_point = x[24]
+    null_point = x[22]
     
     # Calculate the absolute difference between each element and the null point
     y <- abs(x - null_point)
