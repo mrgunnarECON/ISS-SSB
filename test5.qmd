@@ -1,7 +1,7 @@
 ---
 title: "Test File"
 author: "Magne"
-format: pdf
+format: html
 editor: visual
 ---
 
@@ -9,26 +9,15 @@ editor: visual
 
 Loading packages needed
 
-change
-
 ```{r}
-#library(eurostat)
-#library(tidyverse)
-#library(magrittr)
-#library(httr)
-#library(rjstat)
+pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat, rlang, colorspace, imputeTS)
 
-library(mice)
-
-pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat, rlang, colorspace)
-
+library(zoo)
 ```
 
 ## Downloading data
 
 Downloading data and making it into a dataframe
-
-Using
 
 ```{r}
 #| echo: false
@@ -49,23 +38,20 @@ getresponse <- GET(url)
 json <- content(getresponse, as = "text")
 df <- fromJSONstat(json)
 
+# Removing scientific number format
+options(scipen=999)
+
 
 ###Eurostat API
 ## Note: Initialy importing the file through API is alot slower than using the Eurostat query builder
-comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
-comparable_countries_short <- c("NO", "FI", "SE", "DK", "LU", "NL", "IS", "IE", "BE", "DE", "EE")
-api <- get_eurostat("sbs_sc_sca_r2",
-  filters = list(size_emp = "TOTAL",
-                 geo = comparable_countries_short),
-  cache = FALSE
-  )
-
-# I can't get filters function to work properly
-api2 <- api %>%
-  filter(geo == "NO")
-
-
-
+# comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
+# comparable_countries_short <- c("NO", "FI", "SE", "DK", "LU", "NL", "IS", "IE", "BE", "DE", "EE")
+# api <- get_eurostat("sbs_sc_sca_r2",
+#   filters = list(size_emp = "TOTAL",
+#                  geo = comparable_countries_short),
+#                 indic_sb = c("V12150", "V16110"), # This line does not work, no clue why
+#   cache = FALSE,
+#   time_format = "num")
 ```
 
 ## Wrangling Data
@@ -74,8 +60,6 @@ Creating cleaned df2
 
 ```{r}
 #| echo: false
-
-#colnames(df)
 
 ### Removing and renaming colomns
 # Removing duplicates
@@ -98,18 +82,84 @@ df1 <- df1 %>% distinct(category, country, year, indicator, .keep_all = TRUE)
 df2 <- df1 %>% 
   pivot_wider(names_from = indicator, values_from = value_added1)
 
-df2$`Apparent labour productivity (Gross value added per person employed) - thousand euro` <- NULL
-
 df2 <- df2 %>% 
   rename(value_added = "Value added at factor cost - million euro",
   employed = "Persons employed - number")
-
-df2$value_per_employe <- df2$value_added/df2$employed
 
 # Fix year to be numeric
 df2 <- df2 %>%
   mutate(year = as.numeric(year))
 
+# Set negative value added to equal 0
+df2 <- df2 %>% 
+  mutate(value_added = ifelse(value_added < 0, 0, value_added))
+
+```
+
+## Missing Values - Interpolation
+
+Removing years 2005-2008 as most nations do not have any observations for that time period
+
+Creating new df3
+
+Tried using Mice, missForest, linear regression, interpolation, mean, median.
+
+None of these were ideal as they could create large issues
+
+Write a part for why each of them were not ideal
+
+As such we descided to use:
+
+na.locf: NA observation before first observation with value gets the value of the first observation with a value. Or NA obervation after last obervation with value gets the value of the last obervation with a value.
+
+na:approx It create the linear trend (number above + number below)/2 for NA observations between observations with values. If there are multiple missing between it adds values so that the (number above + number below)/2 pattern is followed
+
+```{r}
+#| echo: false
+
+### Interpolation see the trend
+#Lising what nations to be kept
+comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
+
+#comparable_countries_full <- c("Norway")
+
+# Create new dataset keeping only comparable countries
+df3 <- df2 %>% 
+  filter(country %in% comparable_countries_full) 
+
+# Count number of NAs in 'value_added' for each year
+df3_na_counts <- df3 %>%
+  group_by(year) %>%
+  summarize(na_count = sum(is.na(value_added)))   
+# Here we see that there is a significant higher amount of NA observations in 2005-2007. As such we will remove them
+
+# Filtering data for years after 2007, removing 'value_per_employee' column,
+# converting 'category' and 'country' into factors, and creating NA markers
+df3 <- df3 %>% 
+  filter(year > 2007) %>% 
+  mutate(
+    category = as.factor(category), 
+    country = as.factor(country),
+    value_added_na = ifelse(is.na(value_added), 1, 0),
+    employed_na = ifelse(is.na(employed), 1, 0)
+  )
+
+# Grouping by 'country' and 'category', sorting by 'year',
+# filling NA with linear approximations or the last non-NA (from the right)
+df3 <- df3 %>% 
+  group_by(country, category) %>% 
+  arrange(year) %>% 
+  mutate(
+    value_added = ifelse(is.na(value_added), na.approx(value_added, na.rm = FALSE), value_added),
+    employed = ifelse(is.na(employed), na.approx(employed, na.rm = FALSE), employed),
+    value_added = ifelse(is.na(value_added), na.locf(value_added, fromLast = TRUE), value_added),
+    employed = ifelse(is.na(employed), na.locf(employed, fromLast = TRUE), employed)
+  ) %>% 
+  ungroup()
+
+
+
+# TODO Look at places that get infinite and negative values in df4, having 0 employed, but value due to interpolation. Look into making these observations into NA instead
 ```
 
 ## Adding Letter Codes to Dataset
@@ -118,7 +168,7 @@ Import nace letter codes and add them to our dataset
 
 Creating nace_codes2
 
-Creating new df3 with letter codes
+Creating new df4 with letter codes
 
 ```{r}
 #| echo: false
@@ -170,9 +220,9 @@ nace_codes2_example <- nace_codes2 %>%
 
 ### Check for nace_code name(activity), then merge nace_codes 2 variables with main dataframe
 # Lowercase as the data set uses different capitalization p2...
-df2$category_lower <- tolower(df2$category)
+df3$category_lower <- tolower(df3$category)
 # Merge
-df3 <- merge(x = df2, y = nace_codes2, by.x = "category_lower", by.y = "activity", all = FALSE)
+df3 <- merge(x = df3, y = nace_codes2, by.x = "category_lower", by.y = "activity", all = FALSE)
 
 df3 <- df3 %>%
   select(-category_lower)
@@ -189,12 +239,11 @@ df3 <- df3 %>%
 
 Create df4 with value added population and percentage for each level
 
-Added growth rates to df4, not this has not been cleaned, there are some
+Added value per employe and growth rates to df4, not this has not been cleaned, there are some
 
 ```{r}
 #| echo: false
 
-### Creating value added and population percentage for each level
 df4 <- data.frame()
 
 # Loop over each level
@@ -219,23 +268,25 @@ for(l in unique(df3$level)) {
   }
 }
 
+
+#Calculate value per employe
+df4$value_per_employe <- df4$value_added/df4$employed
+
 # Growth rates
 df4 <- df4 %>%
   group_by(country, nace_code) %>%
   arrange(year) %>%
-  mutate(value_added_growth = (value_added/lag(value_added) - 1)*100,
-         population_growth = (employed/lag(employed) - 1)*100) %>%
+  mutate(value_added_growth_percentage = (value_added/lag(value_added) - 1)*100,
+         population_growth_percentage = (employed/lag(employed) - 1)*100) %>%
   ungroup()
 
 
 ### Removing all NA value_added observations for quick view
-df4_no_NA <- df4 %>%
-  filter(!(is.na(value_added) & is.na(value_per_employe)))
-
-df4_no_NA <- df4_no_NA %>% 
-  filter(country == "Norway" & year > 2009)
-
-df4
+# df4_no_NA <- df4 %>%
+#   filter(!(is.na(value_added) & is.na(value_per_employe)))
+# 
+# df4_no_NA <- df4_no_NA %>% 
+#   filter(country == "Norway" & year > 2009)
 ```
 
 ## Individual Country Overview(Structural Development)
@@ -338,7 +389,6 @@ df4_sub <- subset(df4,level == 1 & year == year1 & country %in% country1)
 #df4_sub <- subset(df4,nace_code == "M72" & year == year1 & country %in% country1)
 
 
-
 # ggplot
 ggplot(df4_sub, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code)) +
   geom_col(width = 0.6) +
@@ -378,105 +428,6 @@ ggplot(df4_compare, aes(x = year, y = value_per_employe, colour = country)) +
 
 ```
 
-## Imputation Test
-
-Testing
-
-```{r}
-#| echo: false
-
-### IMPUTATION
-df4_swe_m72 <- df4 %>% 
-  filter(country == "Sweden", nace_code == "M72")
-
-library(mice)
-# Create a complete data frame with all years
-df_full <- data.frame(year = 2005:2020)
-
-# Left join your data with the full dataset
-df_joined <- left_join(df_full, df4_swe_m72, by = "year")
-
-# Generate a default predictor matrix
-predMatrix <- mice::make.predictorMatrix(df_joined)
-
-# Verify that predMatrix is indeed a matrix
-if(!is.matrix(predMatrix)) {
-  stop("predMatrix is not a matrix")
-}
-
-# Set all predictors to 0 (no variables will be imputed)
-predMatrix[,] <- 0
-
-# Set value_added to 1 (only this variable will be imputed)
-predMatrix["value_added",] <- 1
-
-# Perform the imputation
-imp <- mice(df_joined, method='norm.predict', m=5, predictorMatrix = predMatrix)
-
-# Complete the data with the imputed values
-df_imputation <- complete(imp, 1)
-
-
-```
-
-## Interpolation Test
-
-Testing
-
-```{r}
-#| echo: false
-
-### Interpolation see the trend
-df4_swe_m72 <- df4 %>% 
-  filter(country == "Sweden", nace_code == "M72")
-
-library(imputeTS)
-
-# Create a complete data frame with all years
-df_years <- data.frame(year = 2005:2020)
-
-# Left join your data with the full dataset
-df_interpolation <- left_join(df_full, df4_swe_m72, by = "year")
-
-# Use na.interpolation to impute value_added variable
-df_interpolation$value_added <- na_interpolation(df_interpolation$value_added)
-# NA observation before first observation with value gets the value of the first observation with a value
-# It create the linear trend for NA observations between observations with value
-```
-
-## Making Nice Table Image
-
-Image
-
-```{r}
-#| echo: false
-
-library(gt)
-library(magick)
-
-df5 <- df4 %>% 
-  filter(level == 0 & country == "Norway")
-
-gt_table <- gt(df5)
-
-# Convert the gt table to HTML
-html <- as_raw_html(gt_table)
-
-# Read the HTML as an image
-img <- image_read(html)
-
-# Write the image to a file
-image_write(img, path = "table.png")
-
-library(knitr)
-library(kableExtra)
-library(magrittr)
-
-
-
-
-```
-
 ## Dashboard (Shiny)
 
 Make shiny dashboard
@@ -486,8 +437,55 @@ From dropdown get the choice of category like this format: (M72) Research and De
 ```{r}
 #| echo: false
 
+library(shiny)
+library(shinydashboard)
 
 
+ui <- dashboardPage(
+  dashboardHeader(title = "Changes in The Industrial Structure in Norway and Comparative Countries"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Individual Country Overview", tabName = "tab1"),
+      menuItem("Country Comparison Overview", tabName = "tab2")
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "tab1",
+        h2("Individual Country Overview content"),
+      ),
+      tabItem(tabName = "tab2",
+        selectInput("countries", "Select Countries", choices = comparable_countries_full, multiple = TRUE),  # The dropdown menu
+        plotOutput("plot1")  # Place to display the plot
+      )
+    )
+  )
+)
+
+server <- function(input, output) { 
+  output$plot1 <- renderPlot({
+    # Here is where you would use input$countries to adjust your plot based on the selected countries
+    # For example, you could filter df4_sub based on the selected countries
+    filtered_df <- df4_sub[df4_sub$country %in% input$countries, ]  # This assumes df4_sub has a column named 'country'
+    
+    ggplot(filtered_df, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code)) +
+      geom_col(width = 0.6) +
+      coord_flip() +
+      theme_minimal() +
+      facet_wrap(~ country) +
+      scale_fill_manual(values = palette) +
+      labs(
+        title = paste(title_label,"in each country based on NACE sectors", year1),
+        y = y_label,
+        x = "NACE Categories",
+        fill = "NACE Code"
+      ) +
+      theme(legend.position = "none")
+  })
+}
+
+
+shinyApp(ui, server)
 ```
 
 ## Regression GLM model
