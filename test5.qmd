@@ -13,6 +13,11 @@ Loading packages needed
 pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat, rlang, colorspace, imputeTS)
 
 library(zoo)
+
+library(shiny)
+library(shinydashboard)
+
+library(plotly)
 ```
 
 ## Downloading data
@@ -159,7 +164,7 @@ df3 <- df3 %>%
 
 
 
-# TODO Look at places that get infinite and negative values in df4, having 0 employed, but value due to interpolation. Look into making these observations into NA instead
+# TODO Fix NaN values
 ```
 
 ## Adding Letter Codes to Dataset
@@ -430,62 +435,124 @@ ggplot(df4_compare, aes(x = year, y = value_per_employe, colour = country)) +
 
 ## Dashboard (Shiny)
 
-Make shiny dashboard
-
-From dropdown get the choice of category like this format: (M72) Research and Decelopments
+A
 
 ```{r}
 #| echo: false
 
-library(shiny)
-library(shinydashboard)
+# Renaming dataset variables to make them easier to use.
+df5 <- df4
+df5 <- df5 %>% 
+  rename("Value Added (in Million Euro)" = value_added, 
+         "Number of Employed" = employed, 
+         "Value Added per Employe (in Million Euro)" = value_per_employe, 
+         "Percentage of Value Added" = level_value_percentage, 
+         "Percentage of Employed" = level_population_percentage)
 
+
+# Defining dropdown list options
+year_choice <- unique(df5$year)
+indicators <- c("Value Added (in Million Euro)", 
+               "Number of Employed", 
+               "Value Added per Employe (in Million Euro)", 
+               "Percentage of Value Added", 
+               "Percentage of Employed")
+#df5$name
+nace_names_level1 <- unique(subset(df5, level == 1)$name)
+nace_names_level2 <- unique(subset(df5, level == 2)$name)
+nace_names_level3 <- unique(subset(df5, level == 3)$name)
+
+
+#df5_sub <- subset(df5,level == 1 & year == year1)
 
 ui <- dashboardPage(
   dashboardHeader(title = "Changes in The Industrial Structure in Norway and Comparative Countries"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Individual Country Overview", tabName = "tab1"),
-      menuItem("Country Comparison Overview", tabName = "tab2")
+      menuItem("Country Business Structural Comparison", tabName = "tab1"),
+      menuItem("Country Comparison Individual Business Structure", tabName = "tab2")
     )
   ),
   dashboardBody(
     tabItems(
       tabItem(tabName = "tab1",
-        h2("Individual Country Overview content"),
+        selectInput("countries", "Select Countries", choices = comparable_countries_full, selected = c("Norway","Finland","Sweden","Denmark"), multiple = TRUE),
+        selectInput("year", "Select Focus Year", choices = year_choice, selected = 2020, multiple = FALSE),
+        selectInput("indicator", "Select Indicator", choices = indicators, selected = "Percentage of Value Added", multiple = FALSE),
+        plotlyOutput("plot1", height = "auto")  # Setting the height to auto
       ),
+      
       tabItem(tabName = "tab2",
-        selectInput("countries", "Select Countries", choices = comparable_countries_full, multiple = TRUE),  # The dropdown menu
-        plotOutput("plot1")  # Place to display the plot
+        selectInput("level2", "Select Level in Hierarchy", choices = c(1,2,3), selected = 1, multiple = FALSE),
+        uiOutput("ui_select_name2"), # Placeholder for the dynamic selectInput
+        selectInput("countries2", "Select Countries", choices = comparable_countries_full, selected = c("Norway","Finland","Sweden","Denmark"), multiple = TRUE),
+        selectInput("indicator2", "Select Indicator", choices = indicators, selected = "Percentage of Value Added", multiple = FALSE),
+        plotlyOutput("plot2", height = "auto") # Setting the height to auto
       )
     )
   )
 )
 
 server <- function(input, output) { 
-  output$plot1 <- renderPlot({
-    # Here is where you would use input$countries to adjust your plot based on the selected countries
-    # For example, you could filter df4_sub based on the selected countries
-    filtered_df <- df4_sub[df4_sub$country %in% input$countries, ]  # This assumes df4_sub has a column named 'country'
-    
-    ggplot(filtered_df, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code)) +
+    output$ui_select_name2 <- renderUI({
+    switch(input$level2,
+      "1" = selectInput("name2", "Select Nace Name", choices = nace_names_level1),
+      "2" = selectInput("name2", "Select Nace Name", choices = nace_names_level2),
+      "3" = selectInput("name2", "Select Nace Name", choices = nace_names_level3)
+    )
+  })
+  
+    output$plot1 <- renderPlotly({
+      ### Horizontal Bar Plot year interchangable
+      ## Descide year, countries and indicator
+      year1 <- input$year
+      indicator1 <- input$indicator
+      # Defining GGplot inputs and creating ne wdataset
+      #y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
+      title_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(title)
+      df5_sub <- subset(df5,level == 1 & year == year1) # & country %in% country1)
+      #df5_sub <- subset(df5,nace_code == "M72" & year == year1 & country %in% country1)
+      
+      
+    filtered_df <- df5_sub[df5_sub$country %in% input$countries, ]
+    p1 <- ggplot(filtered_df, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(indicator1), fill = nace_code, text = name)) +
       geom_col(width = 0.6) +
       coord_flip() +
       theme_minimal() +
       facet_wrap(~ country) +
       scale_fill_manual(values = palette) +
       labs(
-        title = paste(title_label,"in each country based on NACE sectors", year1),
-        y = y_label,
+        title = paste("Country Business Structural Comparison based on NACE sectors", year1),
+        y = input$indicator,
         x = "NACE Categories",
         fill = "NACE Code"
       ) +
       theme(legend.position = "none")
+    ggplotly(p1, tooltip = c("name"))
   })
+  
+    output$plot2 <- renderPlotly({
+  # Ensure that input$name2 is available before proceeding
+  req(input$name2)
+
+  df5_compare <- df5 %>%
+    filter(country %in% input$countries2, level == as.numeric(input$level2), name == input$name2)
+
+  #TODO fix names
+  p2 <- ggplot(df5_compare, aes(x = year, y = !!rlang::sym(input$indicator2), colour = country, text = name)) +
+    geom_line() +
+    labs(title = "Country Comparison Individual Business Structure",
+         x = "Year",
+         y = input$indicator) +
+    theme_minimal()
+  ggplotly(p2, tooltip = c("x", "name", "colour"))
+})
+  
+
 }
 
-
 shinyApp(ui, server)
+
 ```
 
 ## Regression GLM model
@@ -493,10 +560,3 @@ shinyApp(ui, server)
 Add total economy as a variable to all observations, then run regression on individual variables on how it impacts the total economy
 
 Test M72 population %
-
-```{r}
-#| echo: false
-
-
-
-```
