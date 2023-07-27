@@ -114,7 +114,7 @@ Here we gather the data in order to start analyzing it.
 
 ```{r}
 
-## Working in the right directory local on the computer
+## Working in the right directory where the files lay
 setwd("/home/julsofpet/ISS-SSB/deciding_comparable_countries")
 
 ## I need the tidyverse package
@@ -155,11 +155,12 @@ data <- data %>%
 data <- data %>%
   select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
 
-
+# Create the files with the relevant data, which is then moved to the github folder
 save(data, file = "relevant_data.rds")
 ```
 
 ```{r}
+# Loading in the file that only includes the relevant variables
 load("relevant_data.rds")
 ```
 
@@ -213,7 +214,6 @@ df_poli_gov <- df_means %>%
 # All variables in social equality and rights category
 df_soceq_right <- df_means %>% 
   select(v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2cagenmob, v2catrauni)
-
 ```
 
 ## Creating rankings
@@ -235,7 +235,7 @@ After reciveing a score we will combine the data frames with the vector containi
 Each category will also be ranked in the exact same way (using the same function), and receive a ranking based only on all the variables in each category.
 
 ```{r}
-# The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element in Norway's value. 
+# The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element is Norway's value. 
 
 final_ranking <- function(s) {
   
