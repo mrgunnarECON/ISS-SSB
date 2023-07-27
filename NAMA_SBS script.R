@@ -1,7 +1,7 @@
 
 
 install.packages("xlsx")
-library(xlsx)
+library(readxl)
 library(tidyverse)
 
 
@@ -38,7 +38,7 @@ df <- nama %>%
 
 df$tot_diff <- df$value_sbs-df$value_nama
 
-df$average_value <- df$value_nama+df$value_sbs/2
+df$average_value <- (df$value_nama+df$value_sbs)/2
 
 
 df$percentage_diff <- ((df$value_sbs - df$value_nama)/df$value_sbs)*100
@@ -49,4 +49,27 @@ df$year <- gsub(pattern = "year",
                 df$year ) 
 
 save(df, file = "nama_sbs_comparison.rda") 
+
+df$per
+
+
+# Assuming your threshold is -10% to 10%
+df$correct <- abs(df$percentage_diff) <= 10
+
+# Using ggplot2
+library(ggplot2)
+ggplot(df, aes(x = 1:nrow(df), y = percentage_diff, color = correct)) +
+  geom_point() +
+  scale_color_manual(values = c("green", "red")) +
+  labs(x = "Data Point Index", y = "Percentage Difference")
+
+
+# Calculate the number of values within 10% difference
+num_within_10_percent <- sum(abs(df$percentage_diff) <= 10, na.rm = TRUE)
+num_within_10_percent
+
+
+# Calculate the number of values within 10% difference
+num__not_within_10_percent <- sum(abs(df$percentage_diff) > 10, na.rm = TRUE)
+num__not_within_10_percent
 
