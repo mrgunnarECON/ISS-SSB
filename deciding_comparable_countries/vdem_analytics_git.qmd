@@ -301,3 +301,5 @@ save(poli_gov_rank, file = "political_governance_rank.rds")
 
 save(soceq_right_rank, file = "social_equality_and_rights_rank.rds")
 ```
+
+In order to view these files, they can for example be loaded in using the command: load("filename.rds").
