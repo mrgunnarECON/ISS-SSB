@@ -285,4 +285,19 @@ poli_gov_rank <- final_ranking(df_poli_gov)
 
 # Create ranking based on social equality and rights category
 soceq_right_rank <- final_ranking(df_soceq_right)
+
+
+```
+
+```{r}
+# Saving the data frames to their own files
+save(total_rank, file = "total_rank.rds")
+
+save(corr_rank, file = "corruption_rank.rds")
+
+save(econ_dem_rank, file = "economic_and _demographic_rank.rds")
+
+save(poli_gov_rank, file = "political_governance_rank.rds")
+
+save(soceq_right_rank, file = "social_equality_and_rights_rank.rds")
 ```
