@@ -290,16 +290,22 @@ soceq_right_rank <- final_ranking(df_soceq_right)
 ```
 
 ```{r}
-# Saving the data frames to their own files
-save(total_rank, file = "total_rank.rds")
 
-save(corr_rank, file = "corruption_rank.rds")
+library(openxlsx)
 
-save(econ_dem_rank, file = "economic_and _demographic_rank.rds")
+# Saving the data frames to their own excel files
 
-save(poli_gov_rank, file = "political_governance_rank.rds")
+# All the imported data
+write.xlsx(data, file = "data.xlsx")
 
-save(soceq_right_rank, file = "social_equality_and_rights_rank.rds")
+# Data frame with one value per country per variable
+write.xlsx(df_means, file = "means.xlsx")
+
+# Data frames with the rankings for all and categorical variables
+write.xlsx(total_rank, file = "total_rank.xlsx")
+write.xlsx(corr_rank, file = "corruption_rank.xlsx")
+write.xlsx(econ_dem_rank, file = "economic_and_demographic_rank.xlsx")
+write.xlsx(poli_gov_rank, file = "political_governance_rank.xlsx")
+write.xlsx(soceq_right_rank, file = "social_equality_rank.xlsx")
+
 ```
-
-In order to view these files, they can for example be loaded in using the command: load("filename.rds").
