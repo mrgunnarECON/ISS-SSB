@@ -113,7 +113,6 @@ e_wbgi_cce: **Control of corruption** - Measures the effectiveness of controllin
 Here we gather the data in order to start analyzing it.
 
 ```{r}
-
 ## Working in the right directory where the files lay
 setwd("/home/julsofpet/ISS-SSB/deciding_comparable_countries")
 
@@ -122,11 +121,10 @@ library(tidyverse)
 ```
 
 ```{r}
-# The original data frame is to large to run in git, therefore the first wrangling is done locally and then the file will be loaded into this document
-#|eval: false
+## The original data frame is to large to run in git, therefore the first wrangling is done locally and then the file will be loaded into this document
 
 ## Loading in data
-load("V-Dem-CY-Full+Others-v13.rds")
+# load("V-Dem-CY-Full+Others-v13.rds")
 ```
 
 ### Selecting the relevant variables and observations
@@ -139,24 +137,23 @@ We will then select the variables we want to analyze.
 
 ```{r}
 #This was also done in the local file
-#| eval: false
 
 ## Taking out countries I need for my analysis 
-data <- data %>%
-  filter(country_name %in% countries)
+# data <- data %>%
+#   filter(country_name %in% countries)
 
 
 ## Filtering out years before 2005 
-data <- data %>%
-  filter(year >= 2005)
+# data <- data %>%
+#   filter(year >= 2005)
 
 
 ## Choosing variables to include in analysis
-data <- data %>%
-  select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
+# data <- data %>%
+#   select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
 
-# Create the files with the relevant data, which is then moved to the github folder
-save(data, file = "relevant_data.rds")
+## Create the files with the relevant data, which is then moved to the github folder
+# save(data, file = "relevant_data.rds")
 ```
 
 ```{r}

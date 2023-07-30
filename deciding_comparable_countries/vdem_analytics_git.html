@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>vdem_analytics_git</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="vdem_analytics_git_files/libs/clipboard/clipboard.min.js"></script>
+<script src="vdem_analytics_git_files/libs/quarto-html/quarto.js"></script>
+<script src="vdem_analytics_git_files/libs/quarto-html/popper.min.js"></script>
+<script src="vdem_analytics_git_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="vdem_analytics_git_files/libs/quarto-html/anchor.min.js"></script>
+<link href="vdem_analytics_git_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="vdem_analytics_git_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="vdem_analytics_git_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="vdem_analytics_git_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="vdem_analytics_git_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+<section id="comparative-countries" class="level1">
+<h1>Comparative countries</h1>
+<p>What are comparative countries? They are probably countries with a lot of similarities.</p>
+<p>In order to compare how similar all countries are, it would be quite overwhelming to look at all the countries in the world. Then we need to figure out a starting point.</p>
+<section id="trading-partners" class="level2">
+<h2 class="anchored" data-anchor-id="trading-partners">Trading partners</h2>
+<p>A suggestion given in the task is to look at Norway’s biggest trading partners. This includes EU countries, US, UK, Canada and China.</p>
+<p>Is looking at trading partners really a good metric? Probably not.</p>
+<p>The reason why we trade with other countries is because, either we produce goods they do not produce enough of, or the opposite. That creates a need to buy them from someone who do produce more than enough. Then we already know that there is a difference in the industries between these countries. Looking at trading partners will then only tell us who we buy the stuff we need from, or sell to.</p>
+<p>Norway will also naturally trade more with countries that share a trading agreement or are in close proximity, that will mostly be EU/EEA countries.</p>
+<p>So, although we should not base our comparisons on trading partners, it can be a good staring point.</p>
+<p>Here is a vector of EU and EEA countries. Lichtenstein did unfortunately not work for this analysis, and is therefore excluded.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a vector of relevant countries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>countries <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Austria"</span>, <span class="st">"Belgium"</span>, <span class="st">"Bulgaria"</span>, <span class="st">"Croatia"</span>, <span class="st">"Cyprus"</span>, <span class="st">"Czechia"</span>, <span class="st">"Denmark"</span>, <span class="st">"Estonia"</span> ,<span class="st">"Finland"</span>, <span class="st">"France"</span>, <span class="st">"Germany"</span>, <span class="st">"Greece"</span>, <span class="st">"Hungary"</span>, <span class="st">"Iceland"</span>, <span class="st">"Ireland"</span>, <span class="st">"Italy"</span>, <span class="st">"Latvia"</span>, <span class="st">"Lithuania"</span>, <span class="st">"Luxembourg"</span>, <span class="st">"Malta"</span>, <span class="st">"Netherlands"</span>, <span class="st">"Norway"</span>, <span class="st">"Poland"</span>, <span class="st">"Portugal"</span>, <span class="st">"Romania"</span>, <span class="st">"Slovakia"</span>, <span class="st">"Slovenia"</span>, <span class="st">"Spain"</span>, <span class="st">"Sweden"</span>, <span class="st">"United Kingdom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="v-dem" class="level2">
+<h2 class="anchored" data-anchor-id="v-dem">V-Dem</h2>
+<p>How can we then figure out how similar these countries are?</p>
+<p>The V-Dem data frame consists of many variables describing all countries. We can use some of these variables to compare the relevant countries.</p>
+<p>We have picked out variables in four different categories:</p>
+<ul>
+<li><p>Economic and Demographic</p></li>
+<li><p>Political Governance</p></li>
+<li><p>Social Equality and Rights</p></li>
+<li><p>Corruption</p></li>
+</ul>
+<section id="variable-description" class="level3">
+<h3 class="anchored" data-anchor-id="variable-description"><strong>Variable description</strong></h3>
+<p>Here is a description of all the variables used in our analysis, and why they can be relevant.</p>
+<section id="economic-and-demographic" class="level4">
+<h4 class="anchored" data-anchor-id="economic-and-demographic">Economic and Demographic:</h4>
+<p>e_area: <strong>Land area</strong> - Measures the total area of land within a specific geographical region or country, providing insights into the physical expanse available for various economic, agricultural, and developmental activities.</p>
+<p>e_gdppc: <strong>GDP per capita</strong> - A measure of a country’s economic output per person, providing insights into the standard of living and economic development.</p>
+<p>e_miinflat: <strong>Inflation</strong> - The rate at which the general price level of goods and services rises, affecting purchasing power and the cost of living.</p>
+<p>e_total_resources_income_pc: <strong>Petroleum, coal, natural gas, and metals production per capita</strong> - Indicates the availability and utilization of natural resources for economic development.</p>
+<p>e_pop: <strong>Population</strong> - The total number of people living in a country, influencing economic growth and resource allocation.</p>
+<p>e_pelifeex: <strong>Life expectancy</strong> - The average number of years a person is expected to live, reflecting the overall health and living conditions in a country.</p>
+<p>v2clstown: <strong>State ownership of the economy</strong> - Measures the extent of government or state control over economic activities and industries within a country.</p>
+</section>
+<section id="political-governance" class="level4">
+<h4 class="anchored" data-anchor-id="political-governance">Political Governance:</h4>
+<p>v2x_libdem: <strong>Liberal democracy index</strong> - A measure of the extent to which democratic principles are upheld in a country, including individual rights and freedoms.</p>
+<p>v2x_egaldem: <strong>Egalitarian democracy index</strong> - A measure of the extent to which democratic institutions promote equal representation and participation among citizens.</p>
+<p>v2elfrfair: <strong>Free and fair elections</strong> - Indicates the integrity and fairness of electoral processes in determining the government.</p>
+<p>v2xnp_pres: <strong>Presidentialism Index</strong> - Indicates the concentration of power in the presidency within a democratic system.</p>
+<p>v2svdomaut: <strong>Domestic autonomy</strong> - Reflects the independence and autonomy of a country’s domestic affairs.</p>
+<p>v2svstterr: <strong>State authority over territory</strong> - Indicates the government’s control over its territorial boundaries.</p>
+</section>
+<section id="social-equality-and-rights" class="level4">
+<h4 class="anchored" data-anchor-id="social-equality-and-rights">Social Equality and Rights:</h4>
+<p>v2clrelig: <strong>Freedom of religion</strong> - Indicates the level of religious freedom and tolerance in a country.</p>
+<p>v2clfmove: <strong>Freedom of foreign movement</strong> - Measures the freedom of citizens to travel and move across borders.</p>
+<p>v2pepwrses: <strong>Power distributed by socioeconomic position</strong> - Reflects the equitable distribution of power among different socioeconomic groups.</p>
+<p>v2peedueq: <strong>Educational equality</strong> - Measures the level of equality in access to education across different groups.</p>
+<p>v2peasbecon: <strong>Access to state business opportunities by socioeconomic position</strong> - Indicates the accessibility of economic opportunities to different socioeconomic groups.</p>
+<p>v2cagenmob: <strong>Mass mobilization</strong> - Measures the ability of citizens to mobilize and participate in collective actions, such as demonstrations, strikes and sit-ins.</p>
+<p>v2catrauni: <strong>Engagement in independent trade unions</strong> - Reflects the degree of freedom for citizens to engage in trade unions and labor movements.</p>
+</section>
+<section id="corruption" class="level4">
+<h4 class="anchored" data-anchor-id="corruption">Corruption:</h4>
+<p>v2exbribe: <strong>Executive bribery and corruption exchanges</strong> - Measures the prevalence of corruption within the executive branch of government.</p>
+<p>v2xnp_regcorr: <strong>Regime corruption</strong> - Measures corruption within the political regime.</p>
+<p>v2excrptps: <strong>Public sector corrupt exchanges</strong> - Measures the extent of corruption within the public sector.</p>
+<p>v2mecorrpt: <strong>Media corruption</strong> - Measures corruption within the media sector.</p>
+<p>e_wbgi_cce: <strong>Control of corruption</strong> - Measures the effectiveness of controlling corruption in a country.</p>
+</section>
+</section>
+</section>
+<section id="the-analysis-begins" class="level2">
+<h2 class="anchored" data-anchor-id="the-analysis-begins">The analysis begins</h2>
+<p>Here we gather the data in order to start analyzing it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Working in the right directory where the files lay</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/home/julsofpet/ISS-SSB/deciding_comparable_countries"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## I need the tidyverse package</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## The original data frame is to large to run in git, therefore the first wrangling is done locally and then the file will be loaded into this document</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Loading in data</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># load("V-Dem-CY-Full+Others-v13.rds")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="selecting-the-relevant-variables-and-observations" class="level3">
+<h3 class="anchored" data-anchor-id="selecting-the-relevant-variables-and-observations">Selecting the relevant variables and observations</h3>
+<p>The full V-Dem data frame consists of 27555 observations of 4602 variables. We will therefore start by filtering out countries and time periods that are not relevant.</p>
+<p>We will filter out years before 2005 because we do not have the right data available for the later analysis before 2005, and those years are therefore not relevant.</p>
+<p>We will then select the variables we want to analyze.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#This was also done in the local file</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Taking out countries I need for my analysis </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># data &lt;- data %&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   filter(country_name %in% countries)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Filtering out years before 2005 </span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># data &lt;- data %&gt;%</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   filter(year &gt;= 2005)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="do">## Choosing variables to include in analysis</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># data &lt;- data %&gt;%</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="do">## Create the files with the relevant data, which is then moved to the github folder</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># save(data, file = "relevant_data.rds")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loading in the file that only includes the relevant variables</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"relevant_data.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="creating-the-mean" class="level3">
+<h3 class="anchored" data-anchor-id="creating-the-mean">Creating the mean</h3>
+<p>In order to compare all the countries we need to let each country only have one value per variable, not one for each year.</p>
+<p>We will then need to calculate the mean for each country and variable over all years.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean for each variable for each country</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_means <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Put all the years in a group for each country</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(country_name) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the mean of each of the variable of all the years</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="at">.cols =</span> <span class="fu">c</span>(<span class="st">"v2x_libdem"</span>, <span class="st">"v2x_egaldem"</span>, <span class="st">"v2elfrfair"</span>, <span class="st">"v2exbribe"</span>, <span class="st">"v2excrptps"</span>, <span class="st">"v2clrelig"</span>, <span class="st">"v2clfmove"</span>, <span class="st">"v2pepwrses"</span>, <span class="st">"v2peedueq"</span>, <span class="st">"v2peasbecon"</span>, <span class="st">"v2xnp_pres"</span>, <span class="st">"v2xnp_regcorr"</span>, <span class="st">"v2clstown"</span>, <span class="st">"v2svdomaut"</span>, <span class="st">"v2svstterr"</span>, <span class="st">"v2mecorrpt"</span>, <span class="st">"v2cagenmob"</span>, <span class="st">"v2catrauni"</span>, <span class="st">"e_area"</span>, <span class="st">"e_wbgi_cce"</span>, <span class="st">"e_gdppc"</span>, <span class="st">"e_miinflat"</span>, <span class="st">"e_pop"</span>, <span class="st">"e_total_resources_income_pc"</span>, <span class="st">"e_pelifeex"</span>), <span class="at">.fns =</span> mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we have a data frame that only has one row per country, with all the variables in the columns.</p>
+</section>
+</section>
+<section id="data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="data-wrangling">Data wrangling</h2>
+<p>In order for the next steps to work we need to omit the country names.</p>
+<p>The first data frame is the same as over, just excluding the country names.</p>
+<p>The others only have the variables in each category as described in the variable description above, also excluding country names.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># All dataframes are created to exclude country names for the next step</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>df_noname <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in corruption category</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>df_corr <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2exbribe, v2xnp_regcorr, v2excrptps, v2mecorrpt, e_wbgi_cce)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in economic and demographic category</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>df_econ_dem <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(e_area, e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in political governance category</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>df_poli_gov <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2xnp_pres, v2svdomaut, v2svstterr)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in social equality and rights category</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>df_soceq_right <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2cagenmob, v2catrauni)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="creating-rankings" class="level2">
+<h2 class="anchored" data-anchor-id="creating-rankings">Creating rankings</h2>
+<p>In order to create the ranking system, we need to compare each value to Norway’s value.</p>
+<p>We will calculate the difference in the values between the countries and Norway. Then we will rank all the countries for each variable by how far away their value is from Norway’s value. Then we have a ranking by each variable.</p>
+<p>For example the country that is most similar will receive the score 2 (since Norway will be no. 1).</p>
+<p>In order to create a total ranking we will add up all the rankings, and give each country a total score. In the total ranking, we rank by 25 different variables, and then the lowest possible score is 25 (this will be given to Norway).</p>
+<p>In the end, the countries with the lowest scores will be the most similar to Norway.</p>
+<p>After reciveing a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.</p>
+<section id="category-ranking" class="level3">
+<h3 class="anchored" data-anchor-id="category-ranking">Category ranking</h3>
+<p>Each category will also be ranked in the exact same way (using the same function), and receive a ranking based only on all the variables in each category.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element is Norway's value. </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>final_ranking <span class="ot">&lt;-</span> <span class="cf">function</span>(s) {</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the ranking for each column</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(s, <span class="at">MARGIN =</span> <span class="dv">2</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Store the 24th element in the column (null point)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    null_point <span class="ot">=</span> x[<span class="dv">22</span>]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the absolute difference between each element and the null point</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">abs</span>(x <span class="sc">-</span> null_point)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the rank of each element based on the absolute differences</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> <span class="fu">rank</span>(y)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(z)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert the ranking matrix into a data frame</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(df_rank)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the sum of ranks for each row (country) in the data frame</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  df_rank<span class="sc">$</span>sum_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(df_rank, <span class="at">MARGIN =</span> <span class="dv">1</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">sum</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Combine the calculated ranks with the 'countries' vector</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  df_rank_f <span class="ot">&lt;-</span> df_rank <span class="sc">%&gt;%</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(countries)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return the final data frame with the calculated ranks and countries</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_rank_f)</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Create rankings</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on all factors</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>total_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_noname)</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on corruption category</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>corr_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_corr)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on economic and demographic category</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>econ_dem_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_econ_dem)</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on political governance category</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>poli_gov_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_poli_gov)</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on social equality and rights category</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>soceq_right_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_soceq_right)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the data frames to their own excel files</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># All the imported data</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(data, <span class="at">file =</span> <span class="st">"data.xlsx"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frame with one value per country per variable</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(df_means, <span class="at">file =</span> <span class="st">"means.xlsx"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frames with the rankings for all and categorical variables</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(total_rank, <span class="at">file =</span> <span class="st">"total_rank.xlsx"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(corr_rank, <span class="at">file =</span> <span class="st">"corruption_rank.xlsx"</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(econ_dem_rank, <span class="at">file =</span> <span class="st">"economic_and_demographic_rank.xlsx"</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(poli_gov_rank, <span class="at">file =</span> <span class="st">"political_governance_rank.xlsx"</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(soceq_right_rank, <span class="at">file =</span> <span class="st">"social_equality_rank.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
