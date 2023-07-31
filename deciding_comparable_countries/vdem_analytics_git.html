@@ -192,7 +192,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loading in the file that only includes the relevant variables</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"relevant_data.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"relevant_data.rds"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># For display purposes</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country_name, year, v2x_libdem) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  country_name year v2x_libdem
+1       Sweden 2005      0.885
+2       Sweden 2006      0.888
+3       Sweden 2007      0.892
+4       Sweden 2008      0.892
+5       Sweden 2009      0.892
+6       Sweden 2010      0.892</code></pre>
+</div>
 </div>
 </section>
 <section id="creating-the-mean" class="level3">
@@ -200,14 +214,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>In order to compare all the countries we need to let each country only have one value per variable, not one for each year.</p>
 <p>We will then need to calculate the mean for each country and variable over all years.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean for each variable for each country</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_means <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Put all the years in a group for each country</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(country_name) <span class="sc">%&gt;%</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the mean of each of the variable of all the years</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="at">.cols =</span> <span class="fu">c</span>(<span class="st">"v2x_libdem"</span>, <span class="st">"v2x_egaldem"</span>, <span class="st">"v2elfrfair"</span>, <span class="st">"v2exbribe"</span>, <span class="st">"v2excrptps"</span>, <span class="st">"v2clrelig"</span>, <span class="st">"v2clfmove"</span>, <span class="st">"v2pepwrses"</span>, <span class="st">"v2peedueq"</span>, <span class="st">"v2peasbecon"</span>, <span class="st">"v2xnp_pres"</span>, <span class="st">"v2xnp_regcorr"</span>, <span class="st">"v2clstown"</span>, <span class="st">"v2svdomaut"</span>, <span class="st">"v2svstterr"</span>, <span class="st">"v2mecorrpt"</span>, <span class="st">"v2cagenmob"</span>, <span class="st">"v2catrauni"</span>, <span class="st">"e_area"</span>, <span class="st">"e_wbgi_cce"</span>, <span class="st">"e_gdppc"</span>, <span class="st">"e_miinflat"</span>, <span class="st">"e_pop"</span>, <span class="st">"e_total_resources_income_pc"</span>, <span class="st">"e_pelifeex"</span>), <span class="at">.fns =</span> mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean for each variable for each country</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>df_means <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Put all the years in a group for each country</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(country_name) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the mean of each of the variable of all the years</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="at">.cols =</span> <span class="fu">c</span>(<span class="st">"v2x_libdem"</span>, <span class="st">"v2x_egaldem"</span>, <span class="st">"v2elfrfair"</span>, <span class="st">"v2exbribe"</span>, <span class="st">"v2excrptps"</span>, <span class="st">"v2clrelig"</span>, <span class="st">"v2clfmove"</span>, <span class="st">"v2pepwrses"</span>, <span class="st">"v2peedueq"</span>, <span class="st">"v2peasbecon"</span>, <span class="st">"v2xnp_pres"</span>, <span class="st">"v2xnp_regcorr"</span>, <span class="st">"v2clstown"</span>, <span class="st">"v2svdomaut"</span>, <span class="st">"v2svstterr"</span>, <span class="st">"v2mecorrpt"</span>, <span class="st">"v2cagenmob"</span>, <span class="st">"v2catrauni"</span>, <span class="st">"e_area"</span>, <span class="st">"e_wbgi_cce"</span>, <span class="st">"e_gdppc"</span>, <span class="st">"e_miinflat"</span>, <span class="st">"e_pop"</span>, <span class="st">"e_total_resources_income_pc"</span>, <span class="st">"e_pelifeex"</span>), <span class="at">.fns =</span> mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># For display purposes</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country_name, v2x_libdem) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+  country_name v2x_libdem
+  &lt;chr&gt;             &lt;dbl&gt;
+1 Austria           0.778
+2 Belgium           0.827
+3 Bulgaria          0.574
+4 Croatia           0.669
+5 Cyprus            0.714
+6 Czechia           0.788</code></pre>
+</div>
 </div>
 <p>Now we have a data frame that only has one row per country, with all the variables in the columns.</p>
 </section>
@@ -218,27 +249,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The first data frame is the same as over, just excluding the country names.</p>
 <p>The others only have the variables in each category as described in the variable description above, also excluding country names.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># All dataframes are created to exclude country names for the next step</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>df_noname <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in corruption category</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>df_corr <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2exbribe, v2xnp_regcorr, v2excrptps, v2mecorrpt, e_wbgi_cce)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in economic and demographic category</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>df_econ_dem <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(e_area, e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in political governance category</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>df_poli_gov <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2xnp_pres, v2svdomaut, v2svstterr)</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in social equality and rights category</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>df_soceq_right <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2cagenmob, v2catrauni)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># All dataframes are created to exclude country names for the next step</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>df_noname <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in corruption category</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_corr <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2exbribe, v2xnp_regcorr, v2excrptps, v2mecorrpt, e_wbgi_cce)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in economic and demographic category</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>df_econ_dem <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(e_area, e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in political governance category</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>df_poli_gov <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2x_libdem, v2x_egaldem, v2elfrfair, v2xnp_pres, v2svdomaut, v2svstterr)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co"># All variables in social equality and rights category</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>df_soceq_right <span class="ot">&lt;-</span> df_means <span class="sc">%&gt;%</span> </span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2cagenmob, v2catrauni)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="creating-rankings" class="level2">
@@ -248,79 +279,174 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>For example the country that is most similar will receive the score 2 (since Norway will be no. 1).</p>
 <p>In order to create a total ranking we will add up all the rankings, and give each country a total score. In the total ranking, we rank by 25 different variables, and then the lowest possible score is 25 (this will be given to Norway).</p>
 <p>In the end, the countries with the lowest scores will be the most similar to Norway.</p>
-<p>After reciveing a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.</p>
+<p>After receiving a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.</p>
 <section id="category-ranking" class="level3">
 <h3 class="anchored" data-anchor-id="category-ranking">Category ranking</h3>
 <p>Each category will also be ranked in the exact same way (using the same function), and receive a ranking based only on all the variables in each category.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element is Norway's value. </span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>final_ranking <span class="ot">&lt;-</span> <span class="cf">function</span>(s) {</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the ranking for each column</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(s, <span class="at">MARGIN =</span> <span class="dv">2</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Store the 24th element in the column (null point)</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    null_point <span class="ot">=</span> x[<span class="dv">22</span>]</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the absolute difference between each element and the null point</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">abs</span>(x <span class="sc">-</span> null_point)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the rank of each element based on the absolute differences</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> <span class="fu">rank</span>(y)</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(z)</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert the ranking matrix into a data frame</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(df_rank)</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the sum of ranks for each row (country) in the data frame</span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  df_rank<span class="sc">$</span>sum_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(df_rank, <span class="at">MARGIN =</span> <span class="dv">1</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">sum</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Combine the calculated ranks with the 'countries' vector</span></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  df_rank_f <span class="ot">&lt;-</span> df_rank <span class="sc">%&gt;%</span></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(countries)</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return the final data frame with the calculated ranks and countries</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_rank_f)</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Create rankings</span></span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on all factors</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>total_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_noname)</span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on corruption category</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>corr_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_corr)</span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on economic and demographic category</span></span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>econ_dem_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_econ_dem)</span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on political governance category</span></span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>poli_gov_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_poli_gov)</span>
-<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on social equality and rights category</span></span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>soceq_right_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_soceq_right)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element is Norway's value. </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>final_ranking <span class="ot">&lt;-</span> <span class="cf">function</span>(s) {</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the ranking for each column</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(s, <span class="at">MARGIN =</span> <span class="dv">2</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Store the 22th element in the column (null point)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    null_point <span class="ot">=</span> x[<span class="dv">22</span>]</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the absolute difference between each element and the null point</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">abs</span>(x <span class="sc">-</span> null_point)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the rank of each element based on the absolute differences</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> <span class="fu">rank</span>(y)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(z)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert the ranking matrix into a data frame</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  df_rank <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(df_rank)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the sum of ranks for each row (country) in the data frame</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  df_rank<span class="sc">$</span>sum_rank <span class="ot">&lt;-</span> <span class="fu">apply</span>(df_rank, <span class="at">MARGIN =</span> <span class="dv">1</span>, <span class="at">FUN =</span> <span class="cf">function</span>(x){</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">sum</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Combine the calculated ranks with the 'countries' vector</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  df_rank_f <span class="ot">&lt;-</span> df_rank <span class="sc">%&gt;%</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(countries)</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return the final data frame with the calculated ranks and countries</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_rank_f)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Create rankings</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on all factors</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>total_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_noname)</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on corruption category</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>corr_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_corr)</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on economic and demographic category</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>econ_dem_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_econ_dem)</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on political governance category</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>poli_gov_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_poli_gov)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ranking based on social equality and rights category</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>soceq_right_rank <span class="ot">&lt;-</span> <span class="fu">final_ranking</span>(df_soceq_right)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="display-the-rankings" class="level3">
+<h3 class="anchored" data-anchor-id="display-the-rankings">Display the rankings</h3>
+<p>Here each of the rankings will be displayed.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the data frames to their own excel files</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># All the imported data</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(data, <span class="at">file =</span> <span class="st">"data.xlsx"</span>)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frame with one value per country per variable</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(df_means, <span class="at">file =</span> <span class="st">"means.xlsx"</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frames with the rankings for all and categorical variables</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(total_rank, <span class="at">file =</span> <span class="st">"total_rank.xlsx"</span>)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(corr_rank, <span class="at">file =</span> <span class="st">"corruption_rank.xlsx"</span>)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(econ_dem_rank, <span class="at">file =</span> <span class="st">"economic_and_demographic_rank.xlsx"</span>)</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(poli_gov_rank, <span class="at">file =</span> <span class="st">"political_governance_rank.xlsx"</span>)</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(soceq_right_rank, <span class="at">file =</span> <span class="st">"social_equality_rank.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>display <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(countries, sum_rank) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(countries <span class="sc">!=</span> <span class="st">"Norway"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(sum_rank) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">head</span>(<span class="dv">10</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the ranking af the corruption factors</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(corr_rank)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        countries sum_rank
+1         Germany       24
+2      Luxembourg       24
+3     Netherlands       29
+4         Finland       31
+5          Sweden       33
+6         Iceland       39
+7         Belgium       42
+8         Ireland       46
+9         Estonia       49
+10 United Kingdom       51</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the ranking af the political governance factors</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(poli_gov_rank)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        countries sum_rank
+1         Denmark     46.0
+2         Iceland     57.0
+3          Sweden     58.0
+4     Netherlands     61.0
+5      Luxembourg     63.5
+6         Belgium     64.0
+7         Finland     65.0
+8         Estonia     71.0
+9  United Kingdom     77.0
+10        Czechia     80.5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the ranking af the social equality and rights factors</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(soceq_right_rank)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     countries sum_rank
+1      Finland       50
+2       Sweden       51
+3   Luxembourg       55
+4      Denmark       65
+5      Iceland       79
+6      Ireland       89
+7  Netherlands       90
+8     Slovenia       91
+9      Belgium       98
+10     Czechia       99</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the ranking af the economic and demographic factors</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(econ_dem_rank)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        countries sum_rank
+1         Finland       56
+2         Denmark       66
+3          Sweden       67
+4         Austria       75
+5         Ireland       77
+6     Netherlands       95
+7  United Kingdom       99
+8           Italy      101
+9           Spain      108
+10         Poland      109</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the total ranking</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(total_rank)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     countries sum_rank
+1      Finland    202.0
+2       Sweden    209.0
+3      Denmark    231.0
+4   Luxembourg    262.5
+5  Netherlands    275.0
+6      Iceland    289.0
+7      Ireland    299.5
+8      Belgium    340.0
+9      Germany    345.0
+10     Estonia    346.0</code></pre>
+</div>
+</div>
+<p>We can then see that Finland is the most similar in several of the categorical rankings as wall as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.</p>
+</section>
+<section id="save-the-tables" class="level3">
+<h3 class="anchored" data-anchor-id="save-the-tables">Save the tables</h3>
+<p>The ranking tables are saved as excel files, that are available to look at more closely. It is there possible to look at all the countries and how they score on all variables as well as how they score in each of the categories.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the data frames to their own excel files</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># All the imported data</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(data, <span class="at">file =</span> <span class="st">"data.xlsx"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frame with one value per country per variable</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(df_means, <span class="at">file =</span> <span class="st">"means.xlsx"</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Data frames with the rankings for all and categorical variables</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(total_rank, <span class="at">file =</span> <span class="st">"total_rank.xlsx"</span>)</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(corr_rank, <span class="at">file =</span> <span class="st">"corruption_rank.xlsx"</span>)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(econ_dem_rank, <span class="at">file =</span> <span class="st">"economic_and_demographic_rank.xlsx"</span>)</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(poli_gov_rank, <span class="at">file =</span> <span class="st">"political_governance_rank.xlsx"</span>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="fu">write.xlsx</span>(soceq_right_rank, <span class="at">file =</span> <span class="st">"social_equality_rank.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>

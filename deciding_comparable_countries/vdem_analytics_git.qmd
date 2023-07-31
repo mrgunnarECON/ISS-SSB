@@ -159,6 +159,11 @@ We will then select the variables we want to analyze.
 ```{r}
 # Loading in the file that only includes the relevant variables
 load("relevant_data.rds")
+
+# For display purposes
+data %>% 
+  select(country_name, year, v2x_libdem) %>% 
+  head()
 ```
 
 ### Creating the mean
@@ -177,6 +182,11 @@ df_means <- data %>%
   # Calculate the mean of each of the variable of all the years
   summarise(across(.cols = c("v2x_libdem", "v2x_egaldem", "v2elfrfair", "v2exbribe", "v2excrptps", "v2clrelig", "v2clfmove", "v2pepwrses", "v2peedueq", "v2peasbecon", "v2xnp_pres", "v2xnp_regcorr", "v2clstown", "v2svdomaut", "v2svstterr", "v2mecorrpt", "v2cagenmob", "v2catrauni", "e_area", "e_wbgi_cce", "e_gdppc", "e_miinflat", "e_pop", "e_total_resources_income_pc", "e_pelifeex"), .fns = mean, na.rm = TRUE))
 
+
+# For display purposes
+df_means %>% 
+  select(country_name, v2x_libdem) %>% 
+  head()
 ```
 
 Now we have a data frame that only has one row per country, with all the variables in the columns.
@@ -225,7 +235,7 @@ In order to create a total ranking we will add up all the rankings, and give eac
 
 In the end, the countries with the lowest scores will be the most similar to Norway.
 
-After reciveing a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.
+After receiving a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.
 
 ### Category ranking
 
@@ -239,7 +249,7 @@ final_ranking <- function(s) {
   # Calculate the ranking for each column
   df_rank <- apply(s, MARGIN = 2, FUN = function(x){
     
-    # Store the 24th element in the column (null point)
+    # Store the 22th element in the column (null point)
     null_point = x[22]
     
     # Calculate the absolute difference between each element and the null point
@@ -282,12 +292,46 @@ poli_gov_rank <- final_ranking(df_poli_gov)
 
 # Create ranking based on social equality and rights category
 soceq_right_rank <- final_ranking(df_soceq_right)
-
-
 ```
+
+### Display the rankings
+
+Here each of the rankings will be displayed.
 
 ```{r}
 
+display <- function(df) {
+  
+  df %>%
+    select(countries, sum_rank) %>%
+    filter(countries != "Norway") %>%
+    arrange(sum_rank) %>%
+    head(10)
+}
+
+# Display the ranking af the corruption factors
+display(corr_rank)
+
+# Display the ranking af the political governance factors
+display(poli_gov_rank)
+
+# Display the ranking af the social equality and rights factors
+display(soceq_right_rank)
+
+# Display the ranking af the economic and demographic factors
+display(econ_dem_rank)
+
+# Display the total ranking
+display(total_rank)
+```
+
+We can then see that Finland is the most similar in several of the categorical rankings as wall as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.
+
+### Save the tables
+
+The ranking tables are saved as excel files, that are available to look at more closely. It is there possible to look at all the countries and how they score on all variables as well as how they score in each of the categories.
+
+```{r}
 library(openxlsx)
 
 # Saving the data frames to their own excel files
