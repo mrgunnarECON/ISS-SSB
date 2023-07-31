@@ -9,7 +9,7 @@ editor: visual
 
 Loading packages needed
 
-```{r}
+```{r, warning=FALSE}
 pacman::p_load(tidyverse, eurostat, magrittr, httr, rjstat, rlang, colorspace, imputeTS)
 
 library(zoo)
@@ -18,14 +18,15 @@ library(shiny)
 library(shinydashboard)
 
 library(plotly)
+
+library(RColorBrewer)
 ```
 
 ## Downloading data
 
 Downloading data and making it into a dataframe
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 # Eurostat data code:SBS_SC_SCA_R2
 # Eurostat query builder: https://ec.europa.eu/eurostat/web/query-builder/tool
@@ -40,6 +41,10 @@ Downloading data and making it into a dataframe
 
 url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/sbs_sc_sca_r2?format=JSON&sinceTimePeriod=2005&indic_sb=V12150&indic_sb=V16110&size_emp=TOTAL&nace_r2=B-N_S95_X_K&nace_r2=B&nace_r2=B05&nace_r2=B051&nace_r2=B052&nace_r2=B06&nace_r2=B061&nace_r2=B062&nace_r2=B07&nace_r2=B071&nace_r2=B072&nace_r2=B08&nace_r2=B081&nace_r2=B089&nace_r2=B09&nace_r2=B091&nace_r2=B099&nace_r2=C&nace_r2=C10&nace_r2=C11&nace_r2=C12&nace_r2=C13&nace_r2=C14&nace_r2=C15&nace_r2=C16&nace_r2=C17&nace_r2=C18&nace_r2=C19&nace_r2=C20&nace_r2=C21&nace_r2=C22&nace_r2=C23&nace_r2=C24&nace_r2=C25&nace_r2=C26&nace_r2=C27&nace_r2=C28&nace_r2=C29&nace_r2=C30&nace_r2=C31&nace_r2=C32&nace_r2=C33&nace_r2=D&nace_r2=D35&nace_r2=E&nace_r2=E36&nace_r2=E37&nace_r2=E38&nace_r2=E39&nace_r2=F&nace_r2=F41&nace_r2=F42&nace_r2=F43&nace_r2=G&nace_r2=G45&nace_r2=G46&nace_r2=G47&nace_r2=H&nace_r2=H49&nace_r2=H50&nace_r2=H51&nace_r2=H52&nace_r2=H53&nace_r2=I&nace_r2=I55&nace_r2=I56&nace_r2=J&nace_r2=J58&nace_r2=J59&nace_r2=J60&nace_r2=J61&nace_r2=J62&nace_r2=J63&nace_r2=L&nace_r2=L68&nace_r2=M&nace_r2=M69&nace_r2=M70&nace_r2=M71&nace_r2=M72&nace_r2=M73&nace_r2=M74&nace_r2=M75&nace_r2=N&nace_r2=N77&nace_r2=N78&nace_r2=N79&nace_r2=N80&nace_r2=N81&nace_r2=N82&nace_r2=S95&lang=en"
 getresponse <- GET(url)
+download.file(getresponse, destfile = "data.json")
+
+### TODO load from saved json file, instead of pulling it from the server each time
+
 json <- content(getresponse, as = "text")
 df <- fromJSONstat(json)
 
@@ -63,8 +68,7 @@ options(scipen=999)
 
 Creating cleaned df2
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 ### Removing and renaming colomns
 # Removing duplicates
@@ -119,8 +123,7 @@ na.locf: NA observation before first observation with value gets the value of th
 
 na:approx It create the linear trend (number above + number below)/2 for NA observations between observations with values. If there are multiple missing between it adds values so that the (number above + number below)/2 pattern is followed
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 ### Interpolation see the trend
 #Lising what nations to be kept
@@ -146,7 +149,8 @@ df3 <- df3 %>%
     category = as.factor(category), 
     country = as.factor(country),
     value_added_na = ifelse(is.na(value_added), 1, 0),
-    employed_na = ifelse(is.na(employed), 1, 0)
+    employed_na = ifelse(is.na(employed), 1, 0),
+    na_fixed = ifelse(value_added_na == 1 | employed_na == 1, "Yes", "No")
   )
 
 # Grouping by 'country' and 'category', sorting by 'year',
@@ -175,8 +179,7 @@ Creating nace_codes2
 
 Creating new df4 with letter codes
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 # Import nace files and make names lower case, add A to all coresponding sections
 nace_codes <- read.csv("nace codes.csv")
@@ -209,7 +212,9 @@ nace_codes2 <- nace_codes2 %>%
   select(-class, -isicrev..4)
 
 # Add NACE level 1-3 based on length of nace_code
-nace_codes2$level <- nchar(gsub("\\.", "", nace_codes2$nace_code)) #ignore .
+nace_codes2$level <- ifelse(is.na(nace_codes2$division) & is.na(nace_codes2$group), 1,
+                            ifelse(!is.na(nace_codes2$division) & is.na(nace_codes2$group), 2, 
+                                   ifelse(!is.na(nace_codes2$group), 3, NA)))
 
 # Add all NACE code 
 total_name <- "total business economy; repair of computers, personal and household goods; except financial and insurance activities"
@@ -246,8 +251,7 @@ Create df4 with value added population and percentage for each level
 
 Added value per employe and growth rates to df4, not this has not been cleaned, there are some
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 df4 <- data.frame()
 
@@ -260,11 +264,11 @@ for(l in unique(df3$level)) {
     group_by(country) %>%
     mutate(total_value_added_country = sum(value_added, na.rm = TRUE),
            level_value_percentage = ifelse(!is.na(value_added), 
-                               (value_added / total_value_added_country) * 100,
+                               (value_added / total_value_added_country)*100,
                                NA)) %>% 
     mutate(total_population_country = sum(employed, na.rm = TRUE),
            level_population_percentage = ifelse(!is.na(employed), 
-                               (employed / total_population_country) * 100,
+                               (employed / total_population_country)*100,
                                NA)) 
   # Remove unecesary paramters
   temp_df <- temp_df %>% select(-total_value_added_country, -total_population_country)
@@ -298,8 +302,7 @@ df4 <- df4 %>%
 
 GGplot country comparisons
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 
 # Subset the data
@@ -364,8 +367,7 @@ ggplot(df4_nor_multiyear, aes(x = year, y = level_population_percentage, fill = 
 
 GGplot country comparisons, fills self
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 ### Dataframe to fill in ggplot titles and y
 ggplot_indicator <- data.frame(indicator = c("value_added","employed",        "value_per_employe","level_value_percentage","level_population_percentage"),
@@ -409,14 +411,34 @@ ggplot(df4_sub, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code))))
   ) +
   theme(legend.position = "none")
 
+
+### Compare 2 countries in detail
+
+# Define the color palette with 2 distinct colors for Norway and Denmark
+# palette3 <- brewer.pal(2, "Set1")
+# 
+# country3 <- c("Norway", "Denmark")
+# df4_sub3 <- subset(df4, level == 1 & year == 2020 & country %in% country3)
+# 
+# ggplot(df4_sub3, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!sym(value_added), fill = country)) +
+#   geom_col(position = "dodge", width = 0.6) +
+#   coord_flip() +
+#   theme_minimal() +
+#   scale_fill_manual(values = palette3) +
+#   labs(
+#     title = paste(title_label, "in Norway and Denmark based on NACE sectors", year1),
+#     y = y_label,
+#     x = "NACE Categories",
+#     fill = "Country"
+#   )
+
 ```
 
 ## Country Comparison (Structural Development)
 
 GGplot country comparisons
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 
 # Norway and Sweden B
@@ -437,17 +459,18 @@ ggplot(df4_compare, aes(x = year, y = value_per_employe, colour = country)) +
 
 A
 
-```{r}
-#| echo: false
+```{r, warning=FALSE}
 
 # Renaming dataset variables to make them easier to use.
 df5 <- df4
-df5 <- df5 %>% 
+df5 <- df5 %>%
   rename("Value Added (in Million Euro)" = value_added, 
          "Number of Employed" = employed, 
          "Value Added per Employe (in Million Euro)" = value_per_employe, 
-         "Percentage of Value Added" = level_value_percentage, 
+         "Percentage of Value Added (GDP)" = level_value_percentage, 
          "Percentage of Employed" = level_population_percentage)
+
+
 
 
 # Defining dropdown list options
@@ -455,9 +478,13 @@ year_choice <- unique(df5$year)
 indicators <- c("Value Added (in Million Euro)", 
                "Number of Employed", 
                "Value Added per Employe (in Million Euro)", 
-               "Percentage of Value Added", 
+               "Percentage of Value Added (GDP)", 
                "Percentage of Employed")
 #df5$name
+
+a <- df3 %>% 
+  filter(level == 2)
+
 nace_names_level1 <- unique(subset(df5, level == 1)$name)
 nace_names_level2 <- unique(subset(df5, level == 2)$name)
 nace_names_level3 <- unique(subset(df5, level == 3)$name)
@@ -470,7 +497,8 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Country Business Structural Comparison", tabName = "tab1"),
-      menuItem("Country Comparison Individual Business Structure", tabName = "tab2")
+      menuItem("Country Comparison Individual Business Structure", tabName = "tab2"),
+      menuItem("Comparing 2 countries", tabName = "tab3")
     )
   ),
   dashboardBody(
@@ -483,11 +511,19 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = "tab2",
+        selectInput("countries2", "Select Countries", choices = comparable_countries_full, selected = c("Norway","Finland","Sweden","Denmark"), multiple = TRUE),
         selectInput("level2", "Select Level in Hierarchy", choices = c(1,2,3), selected = 1, multiple = FALSE),
         uiOutput("ui_select_name2"), # Placeholder for the dynamic selectInput
-        selectInput("countries2", "Select Countries", choices = comparable_countries_full, selected = c("Norway","Finland","Sweden","Denmark"), multiple = TRUE),
         selectInput("indicator2", "Select Indicator", choices = indicators, selected = "Percentage of Value Added", multiple = FALSE),
-        plotlyOutput("plot2", height = "auto") # Setting the height to auto
+        plotlyOutput("plot2", height = "auto"), # Setting the height to auto
+      ),
+
+      tabItem(tabName = "tab3",
+        selectInput("country_choice3_1", "Select Country 1", choices = comparable_countries_full, selected = "Norway", multiple = FALSE),
+        selectInput("country_choice3_2", "Select Country 2", choices = comparable_countries_full, selected = "Sweden", multiple = FALSE),
+        selectInput("year3", "Select Focus Year", choices = year_choice, selected = 2020, multiple = FALSE),
+        selectInput("indicator3", "Select Indicator", choices = indicators, selected = "Percentage of Value Added (GDP)", multiple = FALSE),
+        plotlyOutput("plot3")
       )
     )
   )
@@ -508,8 +544,6 @@ server <- function(input, output) {
       year1 <- input$year
       indicator1 <- input$indicator
       # Defining GGplot inputs and creating ne wdataset
-      #y_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(y)
-      title_label <- filter(ggplot_indicator, indicator == indicator1) %>% pull(title)
       df5_sub <- subset(df5,level == 1 & year == year1) # & country %in% country1)
       #df5_sub <- subset(df5,nace_code == "M72" & year == year1 & country %in% country1)
       
@@ -538,20 +572,49 @@ server <- function(input, output) {
   df5_compare <- df5 %>%
     filter(country %in% input$countries2, level == as.numeric(input$level2), name == input$name2)
 
-  #TODO fix names
   p2 <- ggplot(df5_compare, aes(x = year, y = !!rlang::sym(input$indicator2), colour = country, text = name)) +
     geom_line() +
+    scale_x_continuous(breaks = seq(2008,2020,2)) +
     labs(title = "Country Comparison Individual Business Structure",
          x = "Year",
-         y = input$indicator) +
+         y = input$indicator2) +
     theme_minimal()
   ggplotly(p2, tooltip = c("x", "name", "colour"))
+
 })
   
+  output$plot3 <- renderPlotly({
+  # Defining the color palette with 2 distinct colors
+    palette3 <- brewer.pal(2, "Set1")
+    df5_sub3 <- subset(df5, level == 1 & year == input$year3 & country %in% c(input$country_choice3_1, input$country_choice3_2))  # Use the renamed variable name "Percentage of Value Added" instead of "indicator"
+
+    p3 <- ggplot(df5_sub3, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!rlang::sym(input$indicator3), fill = country)) +
+      geom_col(position = "dodge", width = 0.6) +
+      coord_flip() +
+      theme_minimal() +
+      scale_fill_manual(values = palette3) +
+      labs(
+        title = paste("Country Business Structural Comparison in", input$country_choice3_1, "and", input$country_choice3_2, "based on NACE sectors", input$year3),
+        y = input$indicator3,
+        x = "NACE Categories",
+        fill = "Country"
+      ) +
+      theme_minimal()
+    ggplotly(p3, tooltip = c("y", "name"))
+})
 
 }
 
 shinyApp(ui, server)
+
+
+
+# TODO Hover over get if a value was Interpolated or not or not
+# Put header in the middle top
+# Fix the year on the time
+# Add number before NACE main category name
+
+# Put Area chart into dashboard?
 
 ```
 
