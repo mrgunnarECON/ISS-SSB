@@ -327,7 +327,7 @@ display(total_rank)
 
 We can then see that Finland is the most similar in several of the categorical rankings as wall as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.
 
-### Save the tables
+## Save the tables
 
 The ranking tables are saved as excel files, that are available to look at more closely. It is there possible to look at all the countries and how they score on all variables as well as how they score in each of the categories.
 
@@ -350,3 +350,27 @@ write.xlsx(poli_gov_rank, file = "political_governance_rank.xlsx")
 write.xlsx(soceq_right_rank, file = "social_equality_rank.xlsx")
 
 ```
+
+# Conclution
+
+We have not created a detailed analysis on the development in comparative countries. We encourage you to look at the dashboard to see for yourself how the different industries have developed over time.
+
+## Observations
+
+In the dashboard it is possible to see some trends and differences between countries. Here are some of our observations from the visualizations.
+
+### Value added per employee in 2012-2014
+
+If you look at the trends of value added per employee in the years 2012 to 2014, it is easily observable that the value added per employee went up quite a lot in those years. That is most likely as a result of the oil price going up in that period.
+
+We can therefore see that the oil price has a significant effect on the Norwegian economy. This same increase was not observed in other countries and we can therefore conclude that the oil price is much more important for the Norwegian economy than other similar countries.
+
+### Scientific research and development (M72) in Norway
+
+When looking at the percentage of employed in the sector scientific research and development, we can see that Norway has around 0.6% employed in this sector. The other countries generally have between 0.2% and 1%. We can therefore conclude that Norway is employing a comparable amount of people to the other countries.
+
+### Percentage employed in mining and quarrying (B)
+
+In Norway we have around 4% of the working people employed in mining and quarrying. The other countries have between 0.1% and 1.5% employed in the same sector. In Norway a lot of people are employed in the oil industry, and probably accounts for a large percentage of this.
+
+The world is focusing more on green energy and will probably move away from oil in the future. In addition to that the oil reserves will eventually run dry. With such a large percentage employed in this industry, we can see that Norway is more vulnerable than other countries for people loosing their jobs when we move to greener energy.
