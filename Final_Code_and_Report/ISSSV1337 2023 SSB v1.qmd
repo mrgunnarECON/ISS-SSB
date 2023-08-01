@@ -5,13 +5,17 @@ format: pdf
 #  pdf :
 #    pdf-engine : pdflatex
 editor: visual
+execute: 
+  warning: false
 ---
 
-## Introduction
+# Introduction
 
 The task assigned to our group was formulated by Statistics Norway (SSB), the central Norwegian office for official government statistics. The main goal of the task at hand was to describe the development of the business sector in Norway compared to other relevant countries. Drawing such comparisons could be instrumental in gaining a deeper understanding of the global business environment which is becoming increasingly interdependent, particularly in the context of economic shocks and the ongoing green shift. These substantial changes affect the allocation of labour and capital between different types of enterprises and industries, consequently affecting the research and development strategies on both the sectoral and national levels.
 
 In order to provide a comprehensive analysis required by the task formulation, we needed firstly to select the criteria for the classification of the business sector and industrial structure, as well as to select and justify indicators for development. Moreover, it was necessary to make a proper selection of comparable countries and the most appropriate timeframe that could produce relevant results. The next step was to find the right data sources that could enable us to conduct the analysis and report the results. The final stage was supposed to include a justification of the chosen approach and an explanation of its relevance.
+
+**Interactive Dashboard:** https://magne.shinyapps.io/ISSSV1337_2023_SSB/
 
 ## Brainstorming
 
@@ -31,8 +35,7 @@ To classify the business sector and its industrial structure, we will use the NA
 
 ## Indicators for Development:
 
-To describe the development of the business sector, we will use the following indicators: **1. Value Added at Factor Cost.** Which is defined as the gross income from operating activities after adjusting for operating subsidies and indirect taxes.
-The value added at factor cost is, in other words, the value businesses create after deducting input costs. This indicator can tell us something about the sector's overall economic performance and its capacity to generate income and wealth for the economy. By comparing the Value Added across sectors, we can identify which sectors drive economic growth and contribute the most to the GDP. Additionally, understanding the value-added contributions of different sectors helps policymakers assess the diversification of the economy and its resilience to economic shocks.
+To describe the development of the business sector, we will use the following indicators: **1. Value Added at Factor Cost.** Which is defined as the gross income from operating activities after adjusting for operating subsidies and indirect taxes. The value added at factor cost is, in other words, the value businesses create after deducting input costs. This indicator can tell us something about the sector's overall economic performance and its capacity to generate income and wealth for the economy. By comparing the Value Added across sectors, we can identify which sectors drive economic growth and contribute the most to the GDP. Additionally, understanding the value-added contributions of different sectors helps policymakers assess the diversification of the economy and its resilience to economic shocks.
 
 **2. Number of Employees:** The number of persons employed is defined, within the context of structural business statistics, as the total number of persons who work in the observation unit (inclusive of working proprietors, partners working regularly in the unit and unpaid family workers), as well as persons who work outside the unit who belong to it and are paid by it (e.g. sales representatives, delivery personnel, repair and maintenance teams). It excludes manpower supplied to the unit by other enterprises, persons carrying out repair and maintenance work in the enquiry unit on behalf of other enterprises, as well as those on compulsory military service.
 
@@ -42,7 +45,7 @@ The number of employees in each sector provides valuable information about the d
 
 In addition, we calculated the **"Value Added at Factor Cost per Employee."** This indicator represents the value added to the economy per employed in each sector. It is obtained by dividing the total value added at factor cost by the number of employees within a specific sector.
 
-## Loading libraries
+## Loading All Libraries
 
 For this project, we ended up using a number of packages from RStudio that significantly enhanced our data analysis and visualization capabilities. Each package serves a specific purpose and collectively forms a powerful toolkit for R programming. Let's briefly explore the functionalities of some of the key packages we utilized:
 
@@ -63,7 +66,497 @@ For this project, we ended up using a number of packages from RStudio that signi
 pacman::p_load(tidyverse, eurostat, httr, rjstat, rlang, colorspace, imputeTS, zoo, shiny, shinydashboard, plotly, RColorBrewer)
 ```
 
-## Downloading data
+# Comparative countries
+
+What are comparative countries? They are probably countries with a lot of similarities.
+
+In order to compare how similar all countries are, it would be quite overwhelming to look at all the countries in the world. Then we need to figure out a starting point.
+
+## Trading partners
+
+A suggestion given in the task is to look at Norway's biggest trading partners. This includes EU countries, US, UK, Canada and China.
+
+Is looking at trading partners really a good metric? Probably not.
+
+The reason why we trade with other countries is because, either we produce goods they do not produce enough of, or the opposite. That creates a need to buy them from someone who do produce more than enough. Then we already know that there is a difference in the industries between these countries. Looking at trading partners will then only tell us who we buy the stuff we need from, or sell to.
+
+Norway will also naturally trade more with countries that share a trading agreement or are in close proximity, that will mostly be EU/EEA countries.
+
+So, although we should not base our comparisons on trading partners, it can be a good staring point.
+
+Here is a vector of EU and EEA countries. Lichtenstein did unfortunately not work for this analysis, and is therefore excluded.
+
+```{r}
+# Creating a vector of relevant countries
+countries <- c("Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia" ,"Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Norway", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden", "United Kingdom")
+```
+
+## V-Dem
+
+How can we then figure out how similar these countries are?
+
+The V-Dem data frame consists of many variables describing all countries. We can use some of these variables to compare the relevant countries.
+
+We have picked out variables in four different categories:
+
+-   Economic and Demographic
+
+-   Political Governance
+
+-   Social Equality and Rights
+
+-   Corruption
+
+### **Variable description**
+
+Here is a description of all the variables used in our analysis, and why they can be relevant.
+
+#### Economic and Demographic:
+
+e_area: **Land area** - Measures the total area of land within a specific geographical region or country, providing insights into the physical expanse available for various economic, agricultural, and developmental activities.
+
+e_gdppc: **GDP per capita** - A measure of a country's economic output per person, providing insights into the standard of living and economic development.
+
+e_miinflat: **Inflation** - The rate at which the general price level of goods and services rises, affecting purchasing power and the cost of living.
+
+e_total_resources_income_pc: **Petroleum, coal, natural gas, and metals production per capita** - Indicates the availability and utilization of natural resources for economic development.
+
+e_pop: **Population** - The total number of people living in a country, influencing economic growth and resource allocation.
+
+e_pelifeex: **Life expectancy** - The average number of years a person is expected to live, reflecting the overall health and living conditions in a country.
+
+v2clstown: **State ownership of the economy** - Measures the extent of government or state control over economic activities and industries within a country.
+
+#### Political Governance:
+
+v2x_libdem: **Liberal democracy index** - A measure of the extent to which democratic principles are upheld in a country, including individual rights and freedoms.
+
+v2x_egaldem: **Egalitarian democracy index** - A measure of the extent to which democratic institutions promote equal representation and participation among citizens.
+
+v2elfrfair: **Free and fair elections** - Indicates the integrity and fairness of electoral processes in determining the government.
+
+v2xnp_pres: **Presidentialism Index** - Indicates the concentration of power in the presidency within a democratic system.
+
+v2svdomaut: **Domestic autonomy** - Reflects the independence and autonomy of a country's domestic affairs.
+
+v2svstterr: **State authority over territory** - Indicates the government's control over its territorial boundaries.
+
+#### Social Equality and Rights:
+
+v2clrelig: **Freedom of religion** - Indicates the level of religious freedom and tolerance in a country.
+
+v2clfmove: **Freedom of foreign movement** - Measures the freedom of citizens to travel and move across borders.
+
+v2pepwrses: **Power distributed by socioeconomic position** - Reflects the equitable distribution of power among different socioeconomic groups.
+
+v2peedueq: **Educational equality** - Measures the level of equality in access to education across different groups.
+
+v2peasbecon: **Access to state business opportunities by socioeconomic position** - Indicates the accessibility of economic opportunities to different socioeconomic groups.
+
+v2cagenmob: **Mass mobilization** - Measures the ability of citizens to mobilize and participate in collective actions, such as demonstrations, strikes and sit-ins.
+
+v2catrauni: **Engagement in independent trade unions** - Reflects the degree of freedom for citizens to engage in trade unions and labor movements.
+
+#### Corruption:
+
+v2exbribe: **Executive bribery and corruption exchanges** - Measures the prevalence of corruption within the executive branch of government.
+
+v2xnp_regcorr: **Regime corruption** - Measures corruption within the political regime.
+
+v2excrptps: **Public sector corrupt exchanges** - Measures the extent of corruption within the public sector.
+
+v2mecorrpt: **Media corruption** - Measures corruption within the media sector.
+
+e_wbgi_cce: **Control of corruption** - Measures the effectiveness of controlling corruption in a country.
+
+## The analysis begins
+
+Here we gather the data in order to start analyzing it.
+
+```{r}
+## The original data frame is to large to run in git, therefore the first wrangling is done locally and then the file will be loaded into this document
+
+## Loading in data
+# load("V-Dem-CY-Full+Others-v13.rds")
+```
+
+### Selecting the relevant variables and observations
+
+The full V-Dem data frame consists of 27555 observations of 4602 variables. We will therefore start by filtering out countries and time periods that are not relevant.
+
+We will filter out years before 2005 because we do not have the right data available for the later analysis before 2005, and those years are therefore not relevant.
+
+We will then select the variables we want to analyze.
+
+```{r}
+#This was also done in the local file
+
+## Taking out countries I need for my analysis 
+# data <- data %>%
+#   filter(country_name %in% countries)
+
+
+## Filtering out years before 2005 
+# data <- data %>%
+#   filter(year >= 2005)
+
+
+## Choosing variables to include in analysis
+# data <- data %>%
+#   select(country_name, year, v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
+
+## Create the files with the relevant data, which is then moved to the github folder
+# save(data, file = "relevant_data.rds")
+```
+
+```{r}
+# Loading in the file that only includes the relevant variables
+load("relevant_data.rds")
+
+# For display purposes
+data %>% 
+  select(country_name, year, v2x_libdem) %>% 
+  head()
+```
+
+### Creating the mean
+
+In order to compare all the countries we need to let each country only have one value per variable, not one for each year.
+
+We will then need to calculate the mean for each country and variable over all years.
+
+```{r}
+# Calculate the mean for each variable for each country
+df_means <- data %>%
+  
+  # Put all the years in a group for each country
+  group_by(country_name) %>%
+  
+  # Calculate the mean of each of the variable of all the years
+  summarise(across(.cols = c("v2x_libdem", "v2x_egaldem", "v2elfrfair", "v2exbribe", "v2excrptps", "v2clrelig", "v2clfmove", "v2pepwrses", "v2peedueq", "v2peasbecon", "v2xnp_pres", "v2xnp_regcorr", "v2clstown", "v2svdomaut", "v2svstterr", "v2mecorrpt", "v2cagenmob", "v2catrauni", "e_area", "e_wbgi_cce", "e_gdppc", "e_miinflat", "e_pop", "e_total_resources_income_pc", "e_pelifeex"), .fns = mean, na.rm = TRUE))
+
+
+# For display purposes
+df_means %>% 
+  select(country_name, v2x_libdem) %>% 
+  head()
+```
+
+Now we have a data frame that only has one row per country, with all the variables in the columns.
+
+## Data wrangling
+
+In order for the next steps to work we need to omit the country names.
+
+The first data frame is the same as over, just excluding the country names.
+
+The others only have the variables in each category as described in the variable description above, also excluding country names.
+
+```{r}
+# All dataframes are created to exclude country names for the next step
+
+# All variables
+df_noname <- df_means %>%
+  select(v2x_libdem, v2x_egaldem, v2elfrfair, v2exbribe, v2excrptps, v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2xnp_pres, v2xnp_regcorr, v2clstown, v2svdomaut, v2svstterr, v2mecorrpt, v2cagenmob, v2catrauni, e_area, e_wbgi_cce, e_gdppc, e_miinflat, e_pop, e_total_resources_income_pc, e_pelifeex)
+
+# All variables in corruption category
+df_corr <- df_means %>% 
+  select(v2exbribe, v2xnp_regcorr, v2excrptps, v2mecorrpt, e_wbgi_cce)
+
+# All variables in economic and demographic category
+df_econ_dem <- df_means %>% 
+  select(e_area, e_gdppc, e_miinflat, e_total_resources_income_pc, e_pop, e_pelifeex, v2clstown)
+
+# All variables in political governance category
+df_poli_gov <- df_means %>% 
+  select(v2x_libdem, v2x_egaldem, v2elfrfair, v2xnp_pres, v2svdomaut, v2svstterr)
+
+# All variables in social equality and rights category
+df_soceq_right <- df_means %>% 
+  select(v2clrelig, v2clfmove, v2pepwrses, v2peedueq, v2peasbecon, v2cagenmob, v2catrauni)
+```
+
+## Creating rankings
+
+In order to create the ranking system, we need to compare each value to Norway's value.
+
+We will calculate the difference in the values between the countries and Norway. Then we will rank all the countries for each variable by how far away their value is from Norway's value. Then we have a ranking by each variable.
+
+For example the country that is most similar will receive the score 2 (since Norway will be no. 1).
+
+In order to create a total ranking we will add up all the rankings, and give each country a total score. In the total ranking, we rank by 25 different variables, and then the lowest possible score is 25 (this will be given to Norway).
+
+In the end, the countries with the lowest scores will be the most similar to Norway.
+
+After receiving a score we will combine the data frames with the vector containing country names and be able to see which countries have what score.
+
+### Category ranking
+
+Each category will also be ranked in the exact same way (using the same function), and receive a ranking based only on all the variables in each category.
+
+```{r}
+# The function takes a dataframe 's' as input and calculates the ranking of each element in the columns based on its absolute difference from the 22th element in each column. The 22th element is Norway's value. 
+
+final_ranking <- function(s) {
+  
+  # Calculate the ranking for each column
+  df_rank <- apply(s, MARGIN = 2, FUN = function(x){
+    
+    # Store the 22th element in the column (null point)
+    null_point = x[22]
+    
+    # Calculate the absolute difference between each element and the null point
+    y <- abs(x - null_point)
+    
+    # Calculate the rank of each element based on the absolute differences
+    z <- rank(y)
+    return(z)
+})
+  
+  # Convert the ranking matrix into a data frame
+  df_rank <- as.data.frame(df_rank)
+  
+  # Calculate the sum of ranks for each row (country) in the data frame
+  df_rank$sum_rank <- apply(df_rank, MARGIN = 1, FUN = function(x){
+  y <- sum(x, na.rm = TRUE)
+})
+  
+  # Combine the calculated ranks with the 'countries' vector
+  df_rank_f <- df_rank %>%
+  cbind(countries)
+  
+  # Return the final data frame with the calculated ranks and countries
+  return(df_rank_f)
+}
+
+# Create rankings
+
+# Create ranking based on all factors
+total_rank <- final_ranking(df_noname)
+
+# Create ranking based on corruption category
+corr_rank <- final_ranking(df_corr)
+
+# Create ranking based on economic and demographic category
+econ_dem_rank <- final_ranking(df_econ_dem)
+
+# Create ranking based on political governance category
+poli_gov_rank <- final_ranking(df_poli_gov)
+
+# Create ranking based on social equality and rights category
+soceq_right_rank <- final_ranking(df_soceq_right)
+```
+
+### Display the rankings
+
+Here each of the rankings will be displayed.
+
+```{r}
+
+display <- function(df) {
+  
+  df %>%
+    select(countries, sum_rank) %>%
+    filter(countries != "Norway") %>%
+    arrange(sum_rank) %>%
+    head(10)
+}
+
+# Display the ranking of the corruption factors
+display(corr_rank)
+
+# Display the ranking of the political governance factors
+display(poli_gov_rank)
+
+# Display the ranking of the social equality and rights factors
+display(soceq_right_rank)
+
+# Display the ranking of the economic and demographic factors
+display(econ_dem_rank)
+
+# Display the total ranking
+display(total_rank)
+```
+
+We can then see that Finland is the most similar in several of the categorical rankings as well as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.
+
+## Save the tables
+
+The ranking tables are saved as excel files, that are available to look at more closely. It is there possible to look at all the countries and how they score on all variables as well as how they score in each of the categories.
+
+```{r}
+library(openxlsx)
+
+# Saving the data frames to their own excel files
+
+# All the imported data
+write.xlsx(data, file = "data.xlsx")
+
+# Data frame with one value per country per variable
+write.xlsx(df_means, file = "means.xlsx")
+
+# Data frames with the rankings for all and categorical variables
+write.xlsx(total_rank, file = "total_rank.xlsx")
+write.xlsx(corr_rank, file = "corruption_rank.xlsx")
+write.xlsx(econ_dem_rank, file = "economic_and_demographic_rank.xlsx")
+write.xlsx(poli_gov_rank, file = "political_governance_rank.xlsx")
+write.xlsx(soceq_right_rank, file = "social_equality_rank.xlsx")
+
+```
+
+
+# MAIN SOURCES OF ECONOMIC INFORMATION
+
+NAMA (*National Accounts Main Aggregates*) and SBS (*Structural Business Statistics*) are two data frames that provide information on economic activities, specifically value added at different stages of production.
+
+**NAMA** - National accounts aim to capture economic activity within the domestic territory. They combine data from a host of base statistics, and thus they have no common sampling reference frame. Indicators are calculated as **Value added at Gross (VAG)** i.e. it includes the total value of goods and services produced minus the cost of intermediate inputs.
+
+**SBS** - It describes the structure, conduct and performance of economic activities, down to the [most detailed activity level]{.underline} (*several hundred economic sectors*). Indicators are calculated as **Value added at Factor Cost** i.e. it takes into account the gross income from operating activities after adjusting for operating subsidies and indirect taxes. Income and expenditure classified as financial is excluded from value added.
+
+**Why is it hard to measure A?**
+
+This means that some categories, such as (A) - Agriculture, Forestry, and Fishing are hard to quantify accurately due to challenges in determining the value added in certain agricultural activities, especially in cases of vertical integration. The breakdown of value added in such cases can be difficult, leading to classification issues.
+
+**THE PROBLEM - INCOMPARABLE INDICATORS !!**
+
+NAMA has categories that SBS does not have. But SBS uses value added at factor cost, while NAMA uses value added at gross. We tried to compare the two data frames in order to establish relationships for crucial understanding of economic trends and making informed decisions by EU nations. Since both these data frames follow NACE rev. 2 definition of industrial structure, the analysis of the difference between the two data frames was to provide valuable insights into their compatibility & suitability to use them as golden sources for key statistical information on EU nations.
+
+**Eurostat** does not normally track Agriculture and a number of other categories together with the main structural business statistics categories.
+
+Hence, on the outset, there were only 4 categories that are included in both data frames:
+
+1.  Manufacturing
+2.  Construction
+3.  Information and Communication
+4.  Real Estate Activities
+
+**PROPOSED APPROACH**
+
+More categories were found in NAMA dataframe with slightly different definition of the indicators, so we couldn't compare them right away. Proposed approach was to conduct data wrangling and compare various combinations of averages in relation to the common economic indicators in both data frames, understand variations, perform calculations for all the economic indicators and understand how each country's economic performance is compared to Norway's performance across different indicators.
+
+**ANALYSIS Initiated -** trying to fit it in from different data sets (how or why it wont work). Analysis begins....
+
+Loading relevant libraries
+
+```{r}
+#Load libraries
+library(readxl)
+```
+
+### Selecting the relevant variables and observations
+
+We look at the data between 2013 till 2020 to compare common categories with slightly different indicators to see if they are comparable.
+
+```{r}
+#Defining data directory & loading raw data from Excel into dataframe "data"
+data <- read_excel("SBS NAMA data.xlsx", sheet=2)
+data$year2013 <- as.numeric(data$year2013, na.exclude=T)
+class(data$year2013)
+data$year2014 <- as.numeric(data$year2014, na.exclude=T)
+data$year2015 <- as.numeric(data$year2015, na.exclude=T)
+data$year2016 <- as.numeric(data$year2016, na.exclude=T)
+data$year2017 <- as.numeric(data$year2017, na.exclude=T)
+data$year2018 <- as.numeric(data$year2018, na.exclude=T)
+data$year2019 <- as.numeric(data$year2019, na.exclude=T)
+data$year2020 <- as.numeric(data$year2020, na.exclude=T)
+```
+
+**Data frame Filtration**
+
+Filtering NAMA data frame  - into data frame "nama" and pivot it to a long format to organize the years and value columns.
+
+```{r}
+#Filter NAMA data into dataframe "nama"
+nama <- data %>%
+  filter(Dataset == "NAMA") %>%
+  pivot_longer(cols = starts_with("year"), names_to = "year", values_to = "value_nama")
+```
+
+Filtering SBS data frame - into data frame "sbs" and pivoting it to a long format to organize the years and value columns
+
+```{r}
+#Filter SBS data into dataframe "sbs"
+sbs <- data %>%
+  filter(Dataset== "SBS") %>%
+  pivot_longer(cols = starts_with("year"), names_to = "year", values_to = "value_sbs")
+```
+
+Merging data frames - based on Countries, year, and Category (common denominators) & arrive at:
+
+-   Difference between NAMA and SBS values
+-   Average values
+-   \% differences
+
+```{r}
+#Merge NAMA and SBS datasets & save a copy
+df <- nama %>%
+  left_join(sbs, by = c("Countries", "year", "Category"))
+df$tot_diff <- df$value_sbs-df$value_nama
+df$average_value <- (df$value_nama+df$value_sbs)/2
+df$percentage_diff <- ((df$value_sbs - df$value_nama)/df$value_sbs)*100
+df$year <- gsub(pattern = "year", 
+                replacement = "",
+                df$year ) 
+save(df, file = "nama_sbs_comparison.rda") 
+```
+
+**Analysis of the Difference**
+
+Now we will analyze the differences between the NAMA and SBS data frames after merging them. By comparing these values, we aim to understand the variations in measurement and the compatibility of the data frames.
+
+Step 1: Calculate mean to draw single value representing the average for each indicator for that country. This summary helps us to identify the central tendencies and general patterns in the data for each country and indicator.
+
+```{r}
+# Calculate the mean for each Indicator for each Country
+grouped_df <- df %>%
+  group_by(Countries)
+mean_df <- grouped_df %>%
+  summarize(mean_value_nama = mean(value_nama, na.rm = TRUE),
+            mean_value_sbs = mean(value_sbs, na.rm = TRUE),
+            mean_tot_diff = mean(tot_diff, na.rm = TRUE),
+            mean_average_value = mean(average_value, na.rm = TRUE),
+            mean_percentage_diff = mean(percentage_diff, na.rm = TRUE))
+```
+
+Step 2: We aggregate the data to obtain summary statistics for each country over all the years. This allows us to analyze and compare the performance of each country across different economic indicators over time.
+
+```{r}
+# Group years for each Country
+grouped_df_2 <- df %>%
+  group_by(Countries, year)
+mean_df_2 <- grouped_df_2 %>%
+  summarize(mean_value_nama = mean(value_nama, na.rm = TRUE),
+            mean_value_sbs = mean(value_sbs, na.rm = TRUE),
+            mean_tot_diff = mean(tot_diff, na.rm = TRUE),
+            mean_average_value = mean(average_value, na.rm = TRUE),
+            mean_percentage_diff = mean(percentage_diff, na.rm = TRUE))
+```
+
+Step 3: We obtain a single average value that represents the overall performance of that indicator across all the years for all countries.
+
+```{r}
+# Calculate mean for each Indicator for all years 
+grouped_data <- data %>%
+  group_by(Countries,Dataset)
+mean_df_3 <- grouped_data %>%
+  summarize(mean_year2013 = mean(year2013, na.rm = TRUE),
+            mean_year2014 = mean(year2014, na.rm = TRUE),
+            mean_year2015 = mean(year2015, na.rm = TRUE),
+            mean_year2016 = mean(year2016, na.rm = TRUE),
+            mean_year2017 = mean(year2017, na.rm = TRUE),
+            mean_year2018 = mean(year2018, na.rm = TRUE),
+            mean_year2019 = mean(year2019, na.rm = TRUE),
+            mean_year2020 = mean(year2020, na.rm = TRUE))
+```
+
+**CONCLUSION**
+
+We are not going to merge the data from both the data frames as both are not comparable.
+
+Looking at the results, 2/3 are further away than 10% from the mean, as such the two data frames are not comparable.
+
+
+# Creating The Dashboard
 
 Downloading and importing data is a critical step in any data analysis project. In this section, we'll explain how we retrieved the necessary data from Eurostat's database and transformed it into a dataframe for further analysis.
 
@@ -503,3 +996,29 @@ shinyApp(ui, server)
 ## Interactive Dashboard Link
 
 https://magne.shinyapps.io/ISSSV1337_2023_SSB/
+
+# Conclusion
+
+We have not created a detailed analysis on the development in comparative countries. We encourage you to look at the dashboard to see for yourself how the different industries have developed over time.
+
+## Observations
+
+In the dashboard it is possible to see some trends and differences between countries. Here are some of our observations from the visualizations.
+
+### Value added per employee in 2012-2014
+
+If you look at the trends of value added per employee in the years 2012 to 2014, it is easily observable that the value added per employee went up quite a lot in those years. That is most likely as a result of the oil price going up in that period.
+
+We can therefore see that the oil price has a significant effect on the Norwegian economy. This same increase was not observed in other countries and we can therefore conclude that the oil price is much more important for the Norwegian economy than other similar countries.
+
+It as also visible from this graph, that Norway consistently has a much higher value added per employee. This means that each Norwegian worker brings in a lot more money on average than workers from other countries. Also this is probably as a result of the oil industry. It is incredibly lucrative, and therefore brings in so much money that the average is very high.
+
+### Scientific research and development (M72) in Norway
+
+When looking at the percentage of employed in the sector scientific research and development, we can see that Norway has around 0.6% employed in this sector. The other countries generally have between 0.2% and 1%. We can therefore conclude that Norway is employing a comparable amount of people to the other countries.
+
+### Percentage employed in mining and quarrying (B)
+
+In Norway we have around 4% of the working people employed in mining and quarrying. The other countries have between 0.1% and 1.5% employed in the same sector. In Norway a lot of people are employed in the oil industry, and probably accounts for a large percentage of this.
+
+The world is focusing more on green energy and will probably move away from oil in the future. In addition to that the oil reserves will eventually run dry. With such a large percentage employed in this industry, we can see that Norway is more vulnerable than other countries for people loosing their jobs when we move to greener energy.
