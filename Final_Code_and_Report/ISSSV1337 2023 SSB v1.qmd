@@ -1,0 +1,505 @@
+---
+title: "ISSSV1337 2023 SSB"
+author: "Anita, Fria, Magne, Julie, Petar"
+format: pdf
+#  pdf :
+#    pdf-engine : pdflatex
+editor: visual
+---
+
+## Introduction
+
+The task assigned to our group was formulated by Statistics Norway (SSB), the central Norwegian office for official government statistics. The main goal of the task at hand was to describe the development of the business sector in Norway compared to other relevant countries. Drawing such comparisons could be instrumental in gaining a deeper understanding of the global business environment which is becoming increasingly interdependent, particularly in the context of economic shocks and the ongoing green shift. These substantial changes affect the allocation of labour and capital between different types of enterprises and industries, consequently affecting the research and development strategies on both the sectoral and national levels.
+
+In order to provide a comprehensive analysis required by the task formulation, we needed firstly to select the criteria for the classification of the business sector and industrial structure, as well as to select and justify indicators for development. Moreover, it was necessary to make a proper selection of comparable countries and the most appropriate timeframe that could produce relevant results. The next step was to find the right data sources that could enable us to conduct the analysis and report the results. The final stage was supposed to include a justification of the chosen approach and an explanation of its relevance.
+
+## Brainstorming
+
+The fact that all members of our group have a different educational background allowed us to discuss potential solutions from different perspectives. That turned out to be very helpful when faced with a complex issue that requires a certain level of understanding economic, political, and statistical aspects of the issue. Deciding on the list of comparable countries to Norway was the first major problem that needed to be addressed. If we were to include Norway's major trading partners in the list, it would include some EU countries but also such countries as the US, UK, China, and Canada. However, we soon realized that comparing Norway to large countries such as the US and China might be problematic with regard to both sociopolitical and economic dimensions. So, we decided to focus rather on those countries that do not diverge too much from Norway's demographic, political, and economic parameters. It turned out that the list of relevant countries in this case includes the member states of the European Union plus the United Kingdom.
+
+In order to narrow down the number of countries that could give us the most meaningful comparison, we decided to form a criterion based on variables in four different categories, including economy and demographics, political governance, social equality and rights, and corruption. The most suitable data source for this task were datasets provided by the Varieties of Democracy (V-Dem). For instance, some of the variables we used to rank the relevant countries in terms of economy and demographics include "land area", "population", and "GDP per capita", while our evaluation of political governance relies upon variables such as "liberal democracy index", "free and fair elections", or "domestic autonomy". As for the social equality and rights dimension, we decided to use "freedom of religion" and "educational quality" among others, whereas the level of corruption is measured based on the variables like "regime corruption", "media corruption", or "control of corruption".
+
+When it comes to presenting the economic landscape of comparable countries as the central issue of our task, we were initially considering drawing the relevant data from different sources, but we soon realized that having one data source with different economic indicators would be a better choice. Once we decided that our list of relevant countries should include only EU/EEA member states plus the UK, it became apparent that our analysis had to be based on the Eurostat database. The decision to include only European countries into our comparison resolved a potential problem with differing statistical classification of economic activities on different continents, as we could rely solely on the European Nomenclature of Economic Activities (NACE). In that way we were able to gather comparable data through a Eurostat API query to import relevant economic indicators such as "value added" or "persons employed" into R. The next challenge we faced was deciding on the most adequate timeframe for our analysis. It turned out that the most preferred timeframe that spans from early 2000s up to the present day was not feasible due to missing data prior to 2005 and after 2020. So, the only way to go was to conduct our analysis on the available data for the years between 2005 and 2020. However, we were still facing the problem of missing values for some years and some variables. After some consultations, we decided to solve the problem of missing values by applying imputation.
+
+## Policy Relevance:
+
+The analysis of the business sector's development is of significant policy relevance. Understanding how different sectors contribute to economic growth can inform policymaking regarding investments, education, and workforce development. For example, identifying growing sectors may suggest the need for increased educational programs to meet the demand for skilled labor. Additionally, studying the distribution of employment across sectors helps anticipate the impact of economic shocks on various industries and allows for better economic planning and policy responses.
+
+## Criteria for Classification of Business Sector and Industrial Structure:
+
+To classify the business sector and its industrial structure, we will use the NACE codes (Statistical Classification of Economic Activities in the European Community). NACE provides a standardized way to categorize economic activities, making it suitable for cross-country comparisons. Simply put, we will group businesses based on their economic activities, enabling us to analyze the performance of specific sectors over time.
+
+## Indicators for Development:
+
+To describe the development of the business sector, we will use the following indicators: **1. Value Added at Factor Cost.** Which is defined as the gross income from operating activities after adjusting for operating subsidies and indirect taxes.
+The value added at factor cost is, in other words, the value businesses create after deducting input costs. This indicator can tell us something about the sector's overall economic performance and its capacity to generate income and wealth for the economy. By comparing the Value Added across sectors, we can identify which sectors drive economic growth and contribute the most to the GDP. Additionally, understanding the value-added contributions of different sectors helps policymakers assess the diversification of the economy and its resilience to economic shocks.
+
+**2. Number of Employees:** The number of persons employed is defined, within the context of structural business statistics, as the total number of persons who work in the observation unit (inclusive of working proprietors, partners working regularly in the unit and unpaid family workers), as well as persons who work outside the unit who belong to it and are paid by it (e.g. sales representatives, delivery personnel, repair and maintenance teams). It excludes manpower supplied to the unit by other enterprises, persons carrying out repair and maintenance work in the enquiry unit on behalf of other enterprises, as well as those on compulsory military service.
+
+The number of employees in each sector provides valuable information about the distribution of employment within the economy. It helps us to understand the labor market structure and the role of different sectors in providing employment opportunities to the workforce. Changes in the number of employees over time can indicate shifts in labor demand and the relative importance of various sectors in job creation.
+
+**Policy Relevance:** Policymakers can use this indicator to address labor market challenges and develop targeted policies to address potential unemployment issues in specific sectors. For example, if a sector is experiencing a decline in employment, policymakers may consider providing training and support for transitioning workers to find opportunities in other growing sectors. Additionally, understanding the distribution of employment across sectors can inform workforce development initiatives and education policies, aligning them with the needs of the job market.
+
+In addition, we calculated the **"Value Added at Factor Cost per Employee."** This indicator represents the value added to the economy per employed in each sector. It is obtained by dividing the total value added at factor cost by the number of employees within a specific sector.
+
+## Loading libraries
+
+For this project, we ended up using a number of packages from RStudio that significantly enhanced our data analysis and visualization capabilities. Each package serves a specific purpose and collectively forms a powerful toolkit for R programming. Let's briefly explore the functionalities of some of the key packages we utilized:
+
+-   **tidyverse**: Collection of packages for data manipulation and visualization.
+-   **eurostat**: Facilitates retrieval of statistical data from Eurostat database.
+-   **httr**: Handles HTTP requests and responses, useful for web APIs.
+-   **rjstat**: Works with data in the JSON-stat format.
+-   **rlang**: Provides functions for working with language objects.
+-   **colorspace**: Manipulates and converts color spaces in R.
+-   **imputeTS**: Offers imputation methods for time series data.
+-   **zoo**: Handles irregular time series data with the zoo class.
+-   **shiny**: Allows building interactive web applications in R.
+-   **shinydashboard**: Specializes in creating attractive dashboards.
+-   **plotly**: Creates interactive visualizations in R.
+-   **RColorBrewer**: Provides color palettes for appealing plots.
+
+```{r, warning=FALSE}
+pacman::p_load(tidyverse, eurostat, httr, rjstat, rlang, colorspace, imputeTS, zoo, shiny, shinydashboard, plotly, RColorBrewer)
+```
+
+## Downloading data
+
+Downloading and importing data is a critical step in any data analysis project. In this section, we'll explain how we retrieved the necessary data from Eurostat's database and transformed it into a dataframe for further analysis.
+
+Before diving into the code, we identified the specific data requirements for our project. We needed economic indicators, such as "Value added at factor cost - million euro" (V12150) and "Persons employed - number" (V16110), for a set of countries and NACE industry classifications. To access this data, we utilized Eurostat's query builder that to give us the desired indicators, countries, and time period. We additionally tested out the Eurostat API, but in the end we ended up using the Eurostat query builder.
+
+```{r, warning=FALSE, eval=FALSE}
+### Eurostat Query Builder
+# Eurostat data code:SBS_SC_SCA_R2
+# Eurostat query builder link: https://ec.europa.eu/eurostat/web/query-builder/tool
+
+# Time option: since 2005
+# INDIC_SB:
+  # V12150 Value added at factor cost - million euro
+  # V16110 - Persons employed - number
+# SIZE_EMP : TOTAL
+# NACE_R2 : B-N_S95_X_K and all main sections divisions and groups
+
+## Download data through URL
+url <- "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data" #Removed full link
+getresponse <- GET(url)
+json <- content(getresponse, as = "text")
+writeLines(json, "Eurostat SBS Data.json")
+```
+
+```{r, warning=FALSE}
+## Importing json file and saving it as df
+df <- fromJSONstat("Eurostat SBS Data.json")
+
+# Removing scientific number format
+options(scipen=999)
+
+###Eurostat API
+## Note: Initialy importing the file through API is alot slower than using the Eurostat query builder. In addition the data is in a different format.
+# comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
+# comparable_countries_short <- c("NO", "FI", "SE", "DK", "LU", "NL", "IS", "IE", "BE", "DE", "EE")
+# api <- get_eurostat("sbs_sc_sca_r2",
+#   filters = list(size_emp = "TOTAL",
+#                  geo = comparable_countries_short),
+#                 indic_sb = c("V12150", "V16110"), # This line does not work, no clue why
+#   cache = FALSE,
+#   time_format = "num")
+```
+
+## Data Cleaning and Transformation
+
+In the "Wrangling Data" section, we focused on cleaning and reorganizing the data in the dataframe df1 to create a new and more structured dataframe named df2. This process involved several steps to ensure that the data was in a more suitable format for analysis and visualization.
+
+In this step, we performed data cleaning and transformation tasks to prepare the data for analysis. Here's a summary of the actions taken:
+
+-   **Removing Unnecessary Columns:** We removed the columns "Time frequency" and "Size classes in number of persons employed" as they contained redundant information using the distinct() function.
+
+-   **Renaming Columns:** For clarity and consistency, we renamed certain columns using the rename() function.
+
+-   **Handling Fake Duplicates:** To address fake duplicates in the data, we kept only one entry for each unique combination of "category," "country," and "year" using the distinct() function with the .keep_all = TRUE argument.
+
+-   **Transforming Data with pivot_wider():** We used the pivot_wider() function to create new columns for different indicators, such as "value_added" and "employed," reducing the number of rows in the dataframe.
+
+-   **Fixing Year Format:** We converted the "year" column from characters to a numeric format using the as.numeric() function.
+
+-   **Setting Negative Value Added to Zero:** Negative values in the "value_added" column were replaced with zeros using the mutate() function and the ifelse() statement.
+
+These steps resulted in a cleaned and structured dataframe, **df2** ready for further analysis and visualization.
+
+```{r, warning=FALSE}
+### Removing and renaming colomns
+# Removing duplicates
+df1 <- df %>%
+  distinct()
+df1$`Time frequency` <- NULL
+df1$`Size classes in number of persons employed` <- NULL
+df1 <- df1 %>% 
+  rename(category = "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+  indicator = "Economical indicator for structural business statistics",
+  country = "Geopolitical entity (reporting)",
+  year = "Time",
+  value_added1 = "value")
+
+### Find and remove fake duplicates with one NA and one non NA value
+df1 <- df1 %>% distinct(category, country, year, indicator, .keep_all = TRUE)
+
+
+### Make the indicators into new Columns to cut down number of observations
+df2 <- df1 %>% 
+  pivot_wider(names_from = indicator, values_from = value_added1)
+
+df2 <- df2 %>% 
+  rename(value_added = "Value added at factor cost - million euro",
+  employed = "Persons employed - number")
+
+# Fix year to be numeric
+df2 <- df2 %>%
+  mutate(year = as.numeric(year))
+
+# Set negative value added to equal 0
+df2 <- df2 %>% 
+  mutate(value_added = ifelse(value_added < 0, 0, value_added))
+
+```
+
+## Handling Missing Values - Interpolation
+
+In our dataset, we encountered missing values in the "value_added" and "employed" columns for certain years and categories. The years 2005 to 2008 had a significantly higher number of missing observations compared to other years. We needed to address these missing values before proceeding with our analysis to ensure the accuracy and completeness of the data.
+
+To handle missing values, we explored various methods but encountered limitations with each:
+
+-   **Mice and missForest:** Require a substantial amount of complete data, not suitable for our dataset with numerous missing observations.
+
+-   **Linear Regression::** Assumes linearity and may not be robust to outliers or non-linear trends.
+
+-   **Mean and Median::** Simple imputation may lead to biased estimates and overlook variations between categories and countries.
+
+As a better approach, we chose two interpolation methods:
+
+-   **na.locf (Last Observation Carried Forward):** : Imputes missing values with the last known non-missing value within the same category and country, suitable for sequences of missing values.
+
+-   **na.approx:** : Performs linear interpolation between non-missing values, estimating missing observations based on a roughly linear trend.
+
+We used these interpolation techniques to create the cleaned dataframe **df3**, which now contains more complete data while preserving overall trends. This dataset is now ready for further analysis and visualization in our project. It also keeps track if a value has been edited through the Yes/No variable estimated.
+
+```{r, warning=FALSE}
+### Interpolation see the trend
+#Lising what nations to be kept
+comparable_countries_full <- c("Norway", "Finland", "Sweden", "Denmark", "Luxembourg", "Netherlands", "Iceland", "Ireland", "Belgium", "Germany", "Estonia")
+
+#comparable_countries_full <- c("Norway")
+
+# Create new dataset keeping only comparable countries
+df3 <- df2 %>% 
+  filter(country %in% comparable_countries_full) 
+
+# Count number of NAs in 'value_added' for each year
+df3_na_counts <- df3 %>%
+  group_by(year) %>%
+  summarize(na_count = sum(is.na(value_added)))   
+# Here we see that there is a significant higher amount of NA observations in 2005-2007. As such we will remove these years
+
+# Filtering data for years after 2007, removing 'value_per_employee' column,
+# converting 'category' and 'country' into factors, and creating NA markers
+df3 <- df3 %>% 
+  filter(year > 2007) %>% 
+  mutate(
+    category = as.factor(category), 
+    country = as.factor(country),
+    value_added_na = ifelse(is.na(value_added), 1, 0),
+    employed_na = ifelse(is.na(employed), 1, 0),
+    estimated = ifelse(value_added_na == 1 | employed_na == 1, "Yes", "No")
+  )
+
+# Grouping by 'country' and 'category', sorting by 'year',
+# filling NA with linear approximations or the last non-NA (from the right)
+df3 <- df3 %>% 
+  group_by(country, category) %>% 
+  arrange(year) %>% 
+  mutate(
+    value_added = ifelse(is.na(value_added), na.approx(value_added, na.rm = FALSE), value_added),
+    employed = ifelse(is.na(employed), na.approx(employed, na.rm = FALSE), employed),
+    value_added = ifelse(is.na(value_added), na.locf(value_added, fromLast = TRUE), value_added),
+    employed = ifelse(is.na(employed), na.locf(employed, fromLast = TRUE), employed)
+  ) %>% 
+  ungroup()
+```
+
+## Adding Letter Codes to Dataset
+
+In this section, we enriched our dataset df3 by adding NACE (Nomenclature of Economic Activities) letter codes, which provide a hierarchical classification of economic activities through the following steps:
+
+-   **Importing and Preprocessing NACE Codes:** We imported the NACE codes from a CSV file, converted column names to lowercase, and added an "A" to corresponding sections. We also handled duplicate names and created unified NACE codes that uniquely identify each economic activity.
+
+-   **Adding NACE Levels and Total Business Economy Category:** We assigned NACE levels (1 to 3) based on the length of the NACE code. Additionally, we manually added a "total business economy" category at level 0, representing the overall aggregated data.
+
+-   **Merging NACE Codes with Main Dataframe:** We merged the NACE codes (nace_codes2) with the main dataframe (df3) based on matching activity names. This added the NACE level and code information to each row in the main dataframe.
+
+-   **Reordering and Renaming Columns:** Finally, we rearranged the columns and renamed the "category" column to "name" for clarity.
+
+With these enhancements, our dataset **df3** now contains the NACE letter codes from the sorted **nace_codes2**, allowing for more efficient sorting and operations compared to using the full names as we did previously.
+
+```{r, warning=FALSE}
+# Import nace files and make names lower case, add A to all coresponding sections
+nace_codes <- read.csv("nace codes.csv")
+nace_codes1 <- nace_codes %>% 
+  rename_all(tolower) %>%
+  mutate(section = ifelse((section == ""), NA, section)) %>%
+  fill(section, .direction = "down")
+
+# Add group value of the subsequent value and divisions as long as class is not NA
+for (i in 2:nrow(nace_codes1)) {
+  if (!is.na(nace_codes1$class[i])) {
+    nace_codes1$group[i] <- nace_codes1$group[i - 1]}
+  if (!is.na(nace_codes1$group[i])) {
+    nace_codes1$division[i] <- nace_codes1$division[i - 1]}}
+
+# Combine variables to create unified nace_code
+nace_codes1$nace_code <- paste(nace_codes1$section, ifelse(is.na(nace_codes1$group), ifelse(is.na(nace_codes1$division), "", nace_codes1$division), nace_codes1$group), sep = "")
+
+# Lowercase as thedata set uses different capitalization p1...
+nace_codes2 <- nace_codes1 %>% mutate(activity = tolower(activity))
+
+# If a group has same name(activity) as division, then remove group observation
+nace_codes2 <- nace_codes2 %>%
+  group_by(activity) %>%
+  filter((is.na(group) | row_number() == 1) & (is.na(division) | row_number() == 1)) %>% ungroup()
+
+# Removing duplicates and remove unused variables
+nace_codes2 <- nace_codes2 %>% 
+  filter(is.na(class)) %>%
+  select(-class, -isicrev..4)
+
+# Add NACE level 1-3 based on length of nace_code
+nace_codes2$level <- ifelse(is.na(nace_codes2$division) & is.na(nace_codes2$group), 1,
+                            ifelse(!is.na(nace_codes2$division) & is.na(nace_codes2$group), 2, 
+                                   ifelse(!is.na(nace_codes2$group), 3, NA)))
+
+# Add all NACE code 
+total_name <- "total business economy; repair of computers, personal and household goods; except financial and insurance activities"
+total_nace_code <- "B-N_S95_X_K" #set as level 0, manually set this afterwards
+nace_codes2 <- rbind(nace_codes2, data.frame(level = 0, nace_code = total_nace_code, section = "B-N_S95_X_K", division = NA, group = NA, activity = total_name)) %>% 
+  select(level, nace_code, everything())
+
+nace_codes2_example <- nace_codes2 %>% 
+  mutate(section = ifelse(section == "B-N_S95_X_K", ".B-N_S95_X_K", section)) %>% 
+  filter(section %in% c(".B-N_S95_X_K", "A", "B"))
+
+### Check for nace_code name(activity), then merge nace_codes 2 variables with main dataframe
+# Lowercase as the data set uses different capitalization p2...
+df3$category_lower <- tolower(df3$category)
+# Merge
+df3 <- merge(x = df3, y = nace_codes2, by.x = "category_lower", by.y = "activity", all = FALSE)
+
+df3 <- df3 %>%
+  select(-category_lower)
+
+# Reorder and renaming
+df3 <- df3 %>% 
+  select(year, country, level, nace_code, section, division, group, everything())
+df3 <- df3 %>% 
+  rename(name = category)
+
+```
+
+## Adding value added and employe percentages for each level
+
+In this segment, we progress in enhancing our dataset by creating bespoke indicators centered around value added and population metrics. We include value added and employed percentages for each hierarchical level, thereby providing a deeper comprehension of the economic activities within a specific level of a country. This enrichment is achieved through several steps:
+
+-   **Creating Value Added and Employee Percentage for each Level:** We set up a new dataframe, df4, and iterate through df3 on each unique level and year. For every country within the current level and year, we compute total value added and total population of employed individuals. From these, we derive value added and population percentages for each level.
+
+-   **Computation Value Added per Employee:** Calculate the value added per employee.
+
+-   **Creating Growth Rate Indicator:** We determine growth rates for the value added and employed population for each economic activity (nace_code) within each country.
+
+These steps lead to a better **df4** dataframe that includes key metrics for economic activities, aiding in a more detailed analysis.
+
+```{r, warning=FALSE}
+
+df4 <- data.frame()
+
+# Loop over each level
+for(l in unique(df3$level)) {
+  for (y in unique(df3$year)) {
+  # Filter the data for the current level
+  temp_df <- df3 %>%
+    filter(level == l & year == y) %>%
+    group_by(country) %>%
+    mutate(total_value_added_country = sum(value_added, na.rm = TRUE),
+           level_value_percentage = ifelse(!is.na(value_added), 
+                               (value_added / total_value_added_country)*100,
+                               NA)) %>% 
+    mutate(total_population_country = sum(employed, na.rm = TRUE),
+           level_population_percentage = ifelse(!is.na(employed), 
+                               (employed / total_population_country)*100,
+                               NA)) 
+  # Remove unecesary paramters
+  temp_df <- temp_df %>% select(-total_value_added_country, -total_population_country)
+  # Combine the data
+  df4 <- rbind(df4, temp_df)
+  }
+}
+
+#Calculate value per employe
+df4$value_per_employe <- ifelse(df4$employed == 0 | is.na(df4$employed), NA, df4$value_added/df4$employed)
+
+# Growth rates
+df4 <- df4 %>%
+  group_by(country, nace_code) %>%
+  arrange(year) %>%
+  mutate(value_added_growth_percentage = (value_added/lag(value_added) - 1)*100,
+         population_growth_percentage = (employed/lag(employed) - 1)*100) %>%
+  ungroup()
+```
+
+## Preparing Data for Dashboard
+
+In this section, we prepare our dataset for a dashboard, which involves creating a new dataframe (**df5**) and customizing its content for a more user-friendly experience. Here are the key actions performed:
+
+-   **Dataset Renaming:** We make df5 and rename its variables into full-length names for enhanced user readability on the dashboard.
+
+-   **Combining Codes and Names:** We merge the **`nace_code`** and **`name`** to provide more context for the user of the dashboard later.
+
+-   **Creating Dropdown Lists:** We generate dropdown lists for 'Year' and 'Indicators'. These interactive lists will provide users with the ability to select specific years and economic indicators for analysis.
+
+-   **Level-wise Data Subset:** We create subsets of df5 for each level (0 to 3), sorting unique names within each. These subsets will aid in displaying data pertaining to individual levels on the dashboard.
+
+Through these actions, we ensure our dataset is tailored to fit into an interactive, user-friendly dashboard.
+
+```{r, warning=FALSE}
+# Renaming dataset variables to full, easily understandable, names. Also combining nace_codes with category names
+df5 <- df4
+
+df5 <- df5 %>%
+  rename("Value Added (in Million Euro)" = value_added, 
+         "Number of Employed" = employed, 
+         "Value Added per Employee (in Million Euro)" = value_per_employe, 
+         "Percentage of Value Added (GDP)" = level_value_percentage, 
+         "Percentage of Employed" = level_population_percentage,
+         "Country" = country, "Year" = year) %>% 
+  mutate(name = paste0("(", nace_code, ") ", name))
+
+# Saving as RDS
+saveRDS(df5, file = "df5_data.rds")
+
+## Defining dropdown list options
+year_choice <- unique(df5$Year)
+indicators <- c("Value Added (in Million Euro)", 
+               "Number of Employed", 
+               "Value Added per Employee (in Million Euro)", 
+               "Percentage of Value Added (GDP)", 
+               "Percentage of Employed")
+
+# Creating subset of df5 for each level
+nace_names_level0 <- sort(unique(subset(df5, level == 0)$name))
+nace_names_level1 <- sort(unique(subset(df5, level == 1)$name))
+nace_names_level2 <- sort(unique(subset(df5, level == 2)$name))
+nace_names_level3 <- sort(unique(subset(df5, level == 3)$name))
+
+```
+
+## Dashboard
+
+In this section, we focus on the construction of an interactive Shiny dashboard. The dashboard is designed to allow users to explore the changes in the industrial structure in Norway and other comparable countries over time.
+
+-   **User Interface (UI):** The UI is developed using **dashboardPage** to construct a page that includes a header, sidebar, and body. The header is titled "Business Structure". The sidebar houses the menu items, "Business Structure over Time" and "Business Structure Comparison".
+
+-   **Server:** The server component is where the interactive aspects of the Shiny app are handled. Here, we define what should happen when a user changes an input in the UI. We have a **renderUI** function that dynamically changes the options in the NACE category selector based on the selected hierarchy level.
+
+-   **Running the Dashboard:** Finally, we use **`shinyApp`** to combine the UI and server components, creating and launching the Shiny application.
+
+This interactive dashboard presents the data in a comprehensive and dynamic manner, allowing users to customize their view of the business structure over time and conduct country comparisons effectively.
+
+```{r}
+### Changes in The Industrial Structure in Norway and Comparative Countries
+## Making UI
+ui <- dashboardPage(
+  dashboardHeader(title = "Business Structure"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Business Structure over Time", tabName = "tab2"),
+      menuItem("Business Structure Comparison", tabName = "tab3")
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "tab2",
+        selectInput("countries2", "Select Countries", choices = comparable_countries_full, selected = c("Norway","Finland","Sweden","Denmark"), multiple = TRUE),
+        selectInput("level2", "Select Level in Hierarchy", choices = c(0,1,2,3), selected = 0, multiple = FALSE),
+        uiOutput("ui_select_name2"),
+        selectInput("indicator2", "Select Indicator", choices = indicators, selected = "Value Added per Employee (in Million Euro)", multiple = FALSE),
+        plotlyOutput("plot2", height = "auto"),
+      ),
+
+      tabItem(tabName = "tab3",
+        selectInput("country_choice3_1", "Select Country 1", choices = comparable_countries_full, selected = "Norway", multiple = FALSE),
+        selectInput("country_choice3_2", "Select Country 2", choices = comparable_countries_full, selected = "Finland", multiple = FALSE),
+        selectInput("year3", "Select Focus Year", choices = year_choice, selected = 2020, multiple = FALSE),
+        selectInput("indicator3", "Select Indicator", choices = indicators, selected = "Percentage of Value Added (GDP)", multiple = FALSE),
+        plotlyOutput("plot3")
+      )
+    )
+  )
+)
+
+## Making Server
+server <- function(input, output) { 
+    output$ui_select_name2 <- renderUI({
+    switch(input$level2,
+      "0" = selectInput("name2", "Select Nace Category", choices = nace_names_level0),
+      "1" = selectInput("name2", "Select Nace Category", choices = nace_names_level1),
+      "2" = selectInput("name2", "Select Nace Category", choices = nace_names_level2),
+      "3" = selectInput("name2", "Select Nace Category", choices = nace_names_level3)
+    )
+  })
+  
+output$plot2 <- renderPlotly({
+  # Ensures that input$name2 is available before proceeding
+  req(input$name2)
+
+  df5_compare <- df5 %>%
+    filter(Country %in% input$countries2, level == input$level2, name == input$name2)
+
+  p2 <- ggplot(df5_compare, aes(x = Year, y = !!rlang::sym(input$indicator2), colour = Country, text = paste("estimated:", estimated), group = Country)) +
+    geom_line() +
+    scale_x_continuous(breaks = seq(2008,2020,1)) +
+    labs(title = "Country Comparison Individual Business Structure",
+         x = "Year",
+         y = input$indicator2) +
+    theme_minimal()
+
+  ggplotly(p2, tooltip = c("x", "y", "colour", "text"))
+})
+
+  output$plot3 <- renderPlotly({
+  # Defining the color palette with 2 distinct colors
+    palette3 <- c("#1a9d49", "#274247")  
+    df5_sub3 <- subset(df5, level == 1 & Year == input$year3 & Country %in% c(input$country_choice3_1, input$country_choice3_2))  # Use the renamed variable name "Percentage of Value Added" instead of "indicator"
+
+    p3 <- ggplot(df5_sub3, aes(x = factor(nace_code, levels = rev(sort(unique(nace_code)))), y = !!rlang::sym(input$indicator3), fill = Country)) +
+      geom_col(position = "dodge", width = 0.6) +
+      coord_flip() +
+      theme_minimal() +
+      scale_fill_manual(values = palette3) +
+      labs(
+        title = paste("Country Business Structural Comparison in", input$country_choice3_1, "and", input$country_choice3_2, "based on NACE sectors", input$year3),
+        y = input$indicator3,
+        x = "NACE Categories",
+        fill = "Country"
+      ) +
+      theme_minimal()
+    ggplotly(p3, tooltip = c("y", "name"))
+})
+}
+
+## Running Dashboard
+shinyApp(ui, server)
+
+
+
+```
+
+## Interactive Dashboard Link
+
+https://magne.shinyapps.io/ISSSV1337_2023_SSB/
