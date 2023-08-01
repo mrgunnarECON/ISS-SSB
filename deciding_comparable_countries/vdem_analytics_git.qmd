@@ -309,23 +309,23 @@ display <- function(df) {
     head(10)
 }
 
-# Display the ranking af the corruption factors
+# Display the ranking of the corruption factors
 display(corr_rank)
 
-# Display the ranking af the political governance factors
+# Display the ranking of the political governance factors
 display(poli_gov_rank)
 
-# Display the ranking af the social equality and rights factors
+# Display the ranking of the social equality and rights factors
 display(soceq_right_rank)
 
-# Display the ranking af the economic and demographic factors
+# Display the ranking of the economic and demographic factors
 display(econ_dem_rank)
 
 # Display the total ranking
 display(total_rank)
 ```
 
-We can then see that Finland is the most similar in several of the categorical rankings as wall as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.
+We can then see that Finland is the most similar in several of the categorical rankings as well as in the total ranking. We can also see that the most similar countries in descending order based on all factors are: Finland, Sweden, Denmark, Luxembourg, Netherlands, Iceland, Ireland, Belgium, Germany and Estonia.
 
 ## Save the tables
 
@@ -364,6 +364,8 @@ In the dashboard it is possible to see some trends and differences between count
 If you look at the trends of value added per employee in the years 2012 to 2014, it is easily observable that the value added per employee went up quite a lot in those years. That is most likely as a result of the oil price going up in that period.
 
 We can therefore see that the oil price has a significant effect on the Norwegian economy. This same increase was not observed in other countries and we can therefore conclude that the oil price is much more important for the Norwegian economy than other similar countries.
+
+It as also visible from this graph, that Norway consistently has a much higher value added per employee. This means that each Norwegian worker brings in a lot more money on average than workers from other countries. Also this is probably as a result of the oil industry. It is incredibly lucrative, and therefore brings in so much money that the average is very high.
 
 ### Scientific research and development (M72) in Norway
 
