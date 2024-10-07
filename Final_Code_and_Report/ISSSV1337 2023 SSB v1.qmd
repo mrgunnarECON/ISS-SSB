@@ -1,6 +1,6 @@
 ---
 title: "ISSSV1337 2023 SSB"
-author: "Anita, Fria, Magne, Julie, Petar"
+author: "Anita, Frida, Magne, Julie, Petar"
 format: pdf
 #  pdf :
 #    pdf-engine : pdflatex
